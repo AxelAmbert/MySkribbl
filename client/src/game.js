@@ -112,13 +112,16 @@ class MainCanvas extends React.Component {
     }
 
     getANodePos(where, x, y) {
+        if (x >= 800 || x < 0 || y >= 600 || y < 0)
+            return null;
+
         switch (where) {
             case EAST:
-                return ((y * this.width + x) * 4 + 3);
-            case WEST:
-                return;
+                return ((y * this.width + x + 1) * 4 + 3);
+            case WEST :
+                return ((y * this.width + x - 1) * 4 + 3);
             case NORTH:
-                return;
+                return ((y * this.width + y - 1) * 4 + 3);
             default: // SOUTH
                 return;
         }
@@ -136,11 +139,28 @@ class MainCanvas extends React.Component {
         let pixels = imgData.data;
 
 
+        nodeList.push(((y * this.width + x) * 4 + 3));
+        while (nodeList.length) {
+            const numberToTest = nodeList.pop();
 
-       /* console.log(pixels);
-        this.fillIt(pixels, x, y);
+            if (pixels[numberToTest] !== 0)
+                continue;
+
+            pixels[numberToTest] = 255;
+            if (x + 1 < 800)
+                nodeList.push(((y * this.width + x + 1) * 4 + 3));
+            if (x - 1 >= 0)
+                nodeList.push(((y * this.width + x - 1) * 4 + 3));
+            if (y + 1 < 600)
+                nodeList.push((((y + 1) * this.width + x) * 4 + 3));
+            if (y - 1 >= 0)
+                nodeList.push((((y - 1) * this.width + x) * 4 + 3));
+        }
+
+       // console.log(pixels);
+        //this.fillIt(pixels, x, y);
         this.ctx.putImageData(imgData, 0, 0);
-        console.log("endend...", this.stack);*/
+        console.log("endend...", this.stack);
     }
 
 
