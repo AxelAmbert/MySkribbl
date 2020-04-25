@@ -8,10 +8,50 @@ const RUSH = true;
 const SEND_DATA_EVERY_X_MILISECONDS = 1000;
 const DRAW_PIXEL = 0;
 const BUCKET = 1;
-const EAST = 1;//x + 1
-const WEST = 2; // x - 1
-const SOUTH = 3; // y + 1
-const NORTH = 4; // y - 1
+const CHANGE_STROKE_SIZE = 2;
+const EAST = 0;//x + 1
+const WEST = 1; // x - 1
+const SOUTH = 2; // y + 1
+const NORTH = 3; // y - 1
+const PAINT = 0;
+
+class ActionButton extends React.Component {
+    constructor(props) {
+        super(props);
+
+        const urlParams = new URLSearchParams(window.location.search);
+
+        this.instructionArray = new InstructionArray();
+        this.roomName = urlParams.get("roomName");
+        this.socket = null;
+        this.state = {
+            playerTurn: true,
+        };
+    }
+
+    componentDidMount() {
+        this.gameServerInstruction = [this.canvasRef.drawPixel.bind(this.canvasRef)];
+        this.messageServerInstruction = {"newPlayerTurn": this.handleNewPlayerTurn.bind(this)};
+        if (!this.socket) {
+            this.socket = new GameSocket(this, AWS_URL, this.instructionArray, this.gameServerInstruction, this.messageServerInstruction);
+            this.socket.setupSocket();
+        }
+    }
+
+    render() {
+        return ([
+                <button className="favorite styled"
+                        type="button"
+                        onClick={
+                            () =>
+                            {console.log("clicj");
+                                this.setState({playerTurn: this.state.playerTurn === true ? false : true})}}>
+                    Add to favorites
+                </button>
+            ]
+        );
+    }
+}
 
 const clamp = (min, max, val) => Math.min(Math.max(min, val), max);
 
@@ -41,14 +81,21 @@ class bucket {
     }
 }
 
+class changeStrokeSize {
+    constructor(strokeSize) {
+        this.s = strokeSize;
+        this.i = CHANGE_STROKE_SIZE;
+    }
+}
 
 class MainCanvas extends React.Component {
 
     constructor(props) {
         super(props);
+        this.selectedAction =
         this.once = false;
         this.bucketDoing = false;
-        this.choosenColor = [0, 0, 0]
+        this.choosenColor = [0, 0, 0];
         this.t0 = performance.now();
         this.t1 = 0;
         this.stack = 0;
@@ -58,6 +105,7 @@ class MainCanvas extends React.Component {
         this.setPositionWrapper = this.setPosition.bind(this);
         this.width = 800;
         this.height = 600;
+        this.clickOnCanvasAction = {BUCKET: this.bucket.bind(this)}
         this.timeoutInterval =  setInterval(() => {
 
             // Reset the timer if the user don't draw for a long time
@@ -78,53 +126,6 @@ class MainCanvas extends React.Component {
     {
         //console.log("color ", arr[x * y * 4 + 3] !== 0);
         return (arr[(y * this.width + x) * 4 + 3] !== 0);
-    }
-
-    fillIt(array, x, y)
-    {
-
-
-       /* this.stack += 1;
-        if (this.stack >= 5000)
-            return;*/
-        /*if (this.once === false && this.stack >= 5000) {
-            this.once = true;
-            this.ctx.putImageData(imgData, 0, 0);
-        }*/
-        //console.log("ok : ", x, y, this.stack);
-        if (this.isSameColor(array, x, y, this.choosenColor)) {
-            this.stack -= 1;
-            return;
-        }
-       /* array[x * y * 4] = this.choosenColor[0];
-        array[x * y * 4 + 1] = this.choosenColor[1];
-        array[x * y * 4 + 2] = this.choosenColor[2];*/
-        array[ (y * this.width + x) * 4 + 3] = 255;
-        if (x + 1 < 800)
-            this.fillIt(array, x + 1, y);
-        if (y + 1 < 600)
-            this.fillIt(array, x, y + 1);
-        if (x - 1 >= 0)
-            this.fillIt(array, x - 1, y);
-        if (y - 1 >= 0)
-            this.fillIt(array, x, y - 1);
-        this.stack -= 1;
-    }
-
-    getANodePos(where, x, y) {
-        if (x >= 800 || x < 0 || y >= 600 || y < 0)
-            return null;
-
-        switch (where) {
-            case EAST:
-                return ((y * this.width + x + 1) * 4 + 3);
-            case WEST :
-                return ((y * this.width + x - 1) * 4 + 3);
-            case NORTH:
-                return ((y * this.width + y - 1) * 4 + 3);
-            default: // SOUTH
-                return;
-        }
     }
 
     bucket(x, y) {
@@ -187,7 +188,7 @@ class MainCanvas extends React.Component {
 
         let calculateTimeout = 0;
 
-        if (mouse.buttons !== 1)
+        if (mouse.buttons !== 1  || this.selectedAction !== PAINT)
             return;
         if (this.props.blocked !== true) {
             this.setPosition(mouse);
@@ -231,21 +232,28 @@ class MainCanvas extends React.Component {
     }
 
     componentWillUnmount() {
-        this.mouseDownEvent.remove();
-        this.mouseEnterEvent.remove();
-        this.mouseMoveEvent.remove();
-        clearInterval(this.timeoutInterval);
+        if (this.mouseDownEvent)
+            this.mouseDownEvent.remove();
+        if (this.mouseEnterEvent)
+            this.mouseEnterEvent.remove();
+        if (this.mouseMoveEvent)
+            this.mouseMoveEvent.remove();
+        if (this.timeoutInterval)
+            clearInterval(this.timeoutInterval);
         console.log("unmount");
+    }
+
+    handleClickOnCanvas(mouse)
+    {
+        this.setPosition(mouse);
+        if (this.clickOnCanvasAction[this.selectedAction]) {
+            this.clickOnCanvasAction[this.selectedAction]();
+        }
     }
 
     render() {
         return (
-        <canvas id="myCanvas" width="800" height="600" ref={ref => {
-            console.log("REF BRO: ", ref);
-            this.canvasRef = ref;
-            console.log("af ", this.canvasRef);
-
-        }}>
+        <canvas id="myCanvas" width="800" height="600" ref={ref => {this.canvasRef = ref;}} onClick={this.handleClickOnCanvas.bind(this)} >
             Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
         </canvas>
         );
