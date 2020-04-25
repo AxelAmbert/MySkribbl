@@ -1,6 +1,8 @@
-import ReactDOM from "react-dom";
 import React from "react"
+
+
 const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
+
 
 class Menu extends React.Component
 {
@@ -85,7 +87,10 @@ class Menu extends React.Component
 
     );
         return (
-            elements
+            [
+                elements,
+
+            ]
         );
     }
 

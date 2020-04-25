@@ -4,20 +4,11 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const crypto = require('crypto');
 const path = require('path');
-
-//app.use(app.json());
-
-
-
+require("./config/database")();
+require('dotenv').config();
 app.use(express.static(path.join(__dirname, 'build')));
 
-
-
-var datareceived = [];
-
-console.log("mdr");
 app.use(function (req, res, next) {
-
     // Website you wish to allow to connect
     res.setHeader('Access-Control-Allow-Origin', '*');
 

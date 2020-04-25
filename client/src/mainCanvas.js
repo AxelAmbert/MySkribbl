@@ -9,8 +9,8 @@ class MainCanvas extends React.Component {
 
     constructor(props) {
         super(props);
-        this.selectedAction =
-            this.once = false;
+        this.selectedAction = PAINT;
+        this.once = false;
         this.bucketDoing = false;
         this.choosenColor = [0, 0, 0];
         this.t0 = performance.now();
@@ -22,7 +22,7 @@ class MainCanvas extends React.Component {
         this.setPositionWrapper = this.setPosition.bind(this);
         this.width = 800;
         this.height = 600;
-        this.clickOnCanvasAction = {BUCKET: this.bucket.bind(this)};
+        this.clickOnCanvasAction = {1: this.bucket.bind(this)};
         this.timeoutInterval =  setInterval(() => {
 
             // Reset the timer if the user don't draw for a long time
@@ -51,16 +51,18 @@ class MainCanvas extends React.Component {
             return;
         let nodeList = [];
         this.bucketDoing = true;
-        console.log("BUCKET CALL!");
         let imgData = this.ctx.getImageData(0, 0, 800, 600);
         let pixels = imgData.data;
 
 
         nodeList.push({x: x, y: y});
         const tmpT0 = performance.now();
+        let actions = 0;
+
         while (nodeList.length) {
             const posToTest = nodeList.pop();
 
+            actions++;
             const xToTest = posToTest.x;
             const yToTest = posToTest.y;
 
@@ -77,6 +79,7 @@ class MainCanvas extends React.Component {
             if (yToTest - 1 >= 0)
                 nodeList.push({x: xToTest, y: yToTest - 1});
         }
+        console.log("ACTIONS ? ", actions);
         const tmpT1 = performance.now();
         // console.log(pixels);
         //this.fillIt(pixels, x, y);
@@ -159,8 +162,13 @@ class MainCanvas extends React.Component {
     {
         this.setPosition(mouse);
         if (this.clickOnCanvasAction[this.selectedAction]) {
-            this.clickOnCanvasAction[this.selectedAction]();
+            this.clickOnCanvasAction[this.selectedAction](this.pos.x, this.pos.y);
         }
+    }
+
+    changeSelectedAction(selectedAction)
+    {
+        this.selectedAction = selectedAction;
     }
 
     render() {
