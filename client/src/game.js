@@ -133,13 +133,13 @@ class MainCanvas extends React.Component {
             return;
         let nodeList = [];
         this.bucketDoing = true;
-        setTimeout(() => {this.bucketDoing = false}, 10000);
         console.log("BUCKET CALL!");
         let imgData = this.ctx.getImageData(0, 0, 800, 600);
         let pixels = imgData.data;
 
 
         nodeList.push({x: x, y: y});
+        const tmpT0 = performance.now();
         while (nodeList.length) {
             const posToTest = nodeList.pop();
 
@@ -159,11 +159,13 @@ class MainCanvas extends React.Component {
             if (yToTest - 1 >= 0)
                 nodeList.push({x: xToTest, y: yToTest - 1});
         }
-
+        const tmpT1 = performance.now();
        // console.log(pixels);
         //this.fillIt(pixels, x, y);
         this.ctx.putImageData(imgData, 0, 0);
-        console.log("endend...", this.stack);
+        const tmpT2 = performance.now();
+        console.log(" FILL : ", tmpT1 - tmpT0, " SET IMAGE ", tmpT2 - tmpT1);
+        setTimeout(() => {this.bucketDoing = false}, 1000);
     }
 
 
