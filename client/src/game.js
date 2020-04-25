@@ -139,22 +139,25 @@ class MainCanvas extends React.Component {
         let pixels = imgData.data;
 
 
-        nodeList.push(((y * this.width + x) * 4 + 3));
+        nodeList.push({x: x, y: y});
         while (nodeList.length) {
-            const numberToTest = nodeList.pop();
+            const posToTest = nodeList.pop();
 
-            if (pixels[numberToTest] !== 0)
+            const xToTest = posToTest.x;
+            const yToTest = posToTest.y;
+
+            if (pixels[((yToTest * this.width + xToTest) * 4 + 3)] !== 0)
                 continue;
 
-            pixels[numberToTest] = 255;
-            if (x + 1 < 800)
-                nodeList.push(((y * this.width + x + 1) * 4 + 3));
-            if (x - 1 >= 0)
-                nodeList.push(((y * this.width + x - 1) * 4 + 3));
-            if (y + 1 < 600)
-                nodeList.push((((y + 1) * this.width + x) * 4 + 3));
-            if (y - 1 >= 0)
-                nodeList.push((((y - 1) * this.width + x) * 4 + 3));
+            pixels[((yToTest * this.width + xToTest) * 4 + 3)] = 255;
+            if (xToTest + 1 < 800)
+                nodeList.push({x: xToTest + 1, y: yToTest});
+            if (xToTest - 1 >= 0)
+                nodeList.push({x: xToTest - 1, y: yToTest});
+            if (yToTest + 1 < 600)
+                nodeList.push({x: xToTest, y: yToTest + 1});
+            if (yToTest - 1 >= 0)
+                nodeList.push({x: xToTest, y: yToTest - 1});
         }
 
        // console.log(pixels);
