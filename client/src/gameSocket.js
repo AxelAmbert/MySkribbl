@@ -80,7 +80,6 @@ class GameSocket
             }
             console.log("LETS GO!");
             this.interval = setInterval(() => {
-                console.log(" interval  data ", this.instructionArray);
                 if (this.instructionArray.array.length > 2) {
                     this.socket.emit("gameData", this.instructionArray.array);
                     this.instructionArray.array = [];

@@ -10,7 +10,7 @@ class MainCanvas extends React.Component {
     constructor(props) {
         super(props);
         this.selectedAction = PAINT;
-        this.once = false;
+        this.once = true;
         this.bucketDoing = false;
         this.choosenColor = [0, 0, 0];
         this.t0 = performance.now();
@@ -45,6 +45,14 @@ class MainCanvas extends React.Component {
         return (arr[(y * this.width + x) * 4 + 3] !== 0);
     }
 
+    isWhiteColor(arr, x, y)
+    {
+        return (arr[(y * this.width + x) * 4] === 255 &&
+            arr[(y * this.width + x) * 4 + 1] === 255 &&
+            arr[(y * this.width + x) * 4 + 2] === 255 &&
+            arr[(y * this.width + x) * 4 + 3] === 255);
+    }
+
     bucket(x, y) {
 
         if (this.bucketDoing)
@@ -66,9 +74,11 @@ class MainCanvas extends React.Component {
             const xToTest = posToTest.x;
             const yToTest = posToTest.y;
 
-            if (pixels[((yToTest * this.width + xToTest) * 4 + 3)] !== 0)
+            if (this.isWhiteColor(pixels, xToTest, yToTest) === false)
                 continue;
-
+            pixels[((yToTest * this.width + xToTest) * 4)] = 0;
+            pixels[((yToTest * this.width + xToTest) * 4 + 1)] = 0;
+            pixels[((yToTest * this.width + xToTest) * 4 + 2)] = 0;
             pixels[((yToTest * this.width + xToTest) * 4 + 3)] = 255;
             if (xToTest + 1 < 800)
                 nodeList.push({x: xToTest + 1, y: yToTest});
@@ -123,7 +133,6 @@ class MainCanvas extends React.Component {
 
         this.ctx.stroke(); // draw it!
         this.t1 = performance.now();
-        console.log(this.t1 - this.t0);
 
         calculateTimeout = clamp(0, SEND_DATA_EVERY_X_MILISECONDS, Math.floor(this.t1 - this.t0)); // Get the difference between previous click time and actual click time, floor it and then clamp it between 0 and SEND_DATA_EVERY_X_MILISECONDS
         this.props.instructionArray.array.push(new pixel(this.pos.x, this.pos.y, oldpos.x, oldpos.y, calculateTimeout));
@@ -143,6 +152,12 @@ class MainCanvas extends React.Component {
         this.offset = {x: this.canvasRef.offsetLeft , y: this.canvasRef.offsetTop};
         this.ctx = this.canvasRef.getContext("2d");
         this.ctx.strokeStyle = '#000000';
+        this.ctx.lineWidth = 3;
+        if (this.once) {
+            this.ctx.fillStyle = "white";
+            this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
+            this.once = false;
+        }
         console.log("didmount");
     }
 
@@ -169,6 +184,11 @@ class MainCanvas extends React.Component {
     changeSelectedAction(selectedAction)
     {
         this.selectedAction = selectedAction;
+    }
+
+    getCanvas()
+    {
+        return (this.canvasRef);
     }
 
     render() {
