@@ -4,9 +4,20 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const crypto = require('crypto');
 const path = require('path');
-require("./config/database")();
+//const User = require("./Schemas/User");
+//require("./config/database")();
 require('dotenv').config();
+const request = require("request-promise");
+
+var RoomList = [];
+let datareceived = [];
+
+const cookieParser = require("cookie-parser");
 app.use(express.static(path.join(__dirname, 'build')));
+
+app.use(express.json());
+
+app.use(cookieParser());
 
 app.use(function (req, res, next) {
     // Website you wish to allow to connect
@@ -26,6 +37,8 @@ app.use(function (req, res, next) {
     next();
 });
 
+
+
 const verifyParametersIntegrity = (argsToVerify) =>  (req, res, next) => {
     let succeed = true;
 
@@ -39,7 +52,20 @@ const verifyParametersIntegrity = (argsToVerify) =>  (req, res, next) => {
         res.status(400).json({success: false, error: "some parameters are missing"});
 };
 
-var RoomList = [];
+
+app.post("/photo/", async (req, res) => {
+
+    var options = {
+        method: 'POST',
+        uri: "https://webhook.site/6cb3bac6-214e-4f4f-b8a5-19a0a16a7233",
+        body: req.body,
+        json: true // Automatically stringifies the body to JSON
+    };
+    const ok = await request(options);
+    console.log("DONE ! ", ok);
+    console.log("body ? ", req.body);
+});
+
 
 app.get('/newroom/:roomName', (req, res) => {
     const roomName = req.params.roomName || null;
@@ -55,10 +81,29 @@ app.get('/newroom/:roomName', (req, res) => {
     RoomList[req.params.roomName] = {roomName: req.params.roomName, playerSockets: [] };
     res.json({success: true, roomName: req.params.roomName});
 });
+/*
+app.post("/user/", async (req, res) => {
+
+    const {username, password} = req.body;
+    let user = null;
+
+    try {
+        user = await User.create({
+            username,
+            password
+        });
+    } catch (error) {
+        res.status(500).json({success: false, error});
+        return;
+    }
+
+    res.status(200).json(user);
+});*/
 
 app.get('/joinroom/:roomName',
     (req, res) => {
     const Room = RoomList[req.params.roomName];
+
 
     if (!Room) {
         res.status(404).json({success: false, error: `Room ${req.params.roomName} don't exist`});
