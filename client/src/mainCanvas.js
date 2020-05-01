@@ -9,6 +9,7 @@ class MainCanvas extends React.Component {
 
     constructor(props) {
         super(props);
+        console.log("oh ???");
         this.selectedAction = PAINT;
         this.once = true;
         this.bucketDoing = false;
@@ -22,8 +23,16 @@ class MainCanvas extends React.Component {
         this.setPositionWrapper = this.setPosition.bind(this);
         this.width = 800;
         this.height = 600;
-        this.clickOnCanvasAction = {1: this.bucket.bind(this)};
+
+        if (this.props.blocked !== true) {
+            console.log("oh zeubo");
+            this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
+            this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
+            this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
+        }
+
         this.timeoutInterval =  setInterval(() => {
+
 
             // Reset the timer if the user don't draw for a long time
             const tX = performance.now();
@@ -35,8 +44,14 @@ class MainCanvas extends React.Component {
     }
 
     setPosition(mouse) {
-        this.pos.x = mouse.clientX - this.offset.x;
-        this.pos.y = mouse.clientY - this.offset.y;
+        const rect = this.canvasRef.getBoundingClientRect();
+
+        this.pos = {
+            x: (mouse.clientX - rect.left) / (rect.right - rect.left) * this.canvasRef.width,
+            y: (mouse.clientY - rect.top) / (rect.bottom - rect.top) * this.canvasRef.height
+        };
+
+
     }
 
     isSameColor(arr, x, y, color)
@@ -115,15 +130,12 @@ class MainCanvas extends React.Component {
 
     handlePlayerDrawing(mouse)
     {
-
+        console.log("???");
         let calculateTimeout = 0;
 
-        if (mouse.buttons !== 1  || this.selectedAction !== PAINT)
+        if (mouse.buttons !== 1  || this.selectedAction !== PAINT || this.props.blocked)
             return;
-        if (this.props.blocked !== true) {
-            this.setPosition(mouse);
-            return (this.bucket(this.pos.x, this.pos.y));
-        }
+        console.log("go");
         this.ctx.beginPath(); // begin
         const oldpos = {x: this.pos.x, y: this.pos.y};
         this.ctx.moveTo(this.pos.x, this.pos.y); // from
@@ -141,11 +153,12 @@ class MainCanvas extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
         console.log("UP ", this.props.blocked);
-        //if (this.props.blocked !== true) {
-        this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
-        this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
-        this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
-        //}
+        if (this.props.blocked !== true && !this.mouseMoveEvent) {
+            console.log("oh zeubo3");
+            this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
+            this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
+            this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
+        }
     }
 
     componentDidMount() {
@@ -176,8 +189,16 @@ class MainCanvas extends React.Component {
     handleClickOnCanvas(mouse)
     {
         this.setPosition(mouse);
-        if (this.clickOnCanvasAction[this.selectedAction]) {
-            this.clickOnCanvasAction[this.selectedAction](this.pos.x, this.pos.y);
+
+        if (this.props.blocked) {
+            return;
+        }
+        switch (this.selectedAction) {
+            case BUCKET:
+                this.bucket(this.pos.x, this.pos.y);
+                break;
+            default:
+                return;
         }
     }
 

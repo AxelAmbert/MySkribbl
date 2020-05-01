@@ -1,3 +1,9 @@
+const Room = require("./room");
+const Game = require("./game");
+const Player = require("./player");
+var io = require('socket.io')(http);
+const serverMainSocket = require("./serverMainSocket");
+
 var express = require("express");
 var app = express();
 var http = require('http').createServer(app);
@@ -8,12 +14,15 @@ const path = require('path');
 //require("./config/database")();
 require('dotenv').config();
 const request = require("request-promise");
+const cookieParser = require("cookie-parser");
+const Routines = require("./routines");
 
 var RoomList = [];
 let datareceived = [];
+const serverMainSocketInstance = new serverMainSocket(io, RoomList);
 
-const cookieParser = require("cookie-parser");
-app.use(express.static(path.join(__dirname, 'build')));
+
+app.use(express.static(path.join(__dirname, '../build')));
 
 app.use(express.json());
 
@@ -66,7 +75,6 @@ app.post("/photo/", async (req, res) => {
     console.log("body ? ", req.body);
 });
 
-
 app.get('/newroom/:roomName', (req, res) => {
     const roomName = req.params.roomName || null;
 
@@ -77,9 +85,10 @@ app.get('/newroom/:roomName', (req, res) => {
         res.json({success: false, error: "No room name specified"});
         return;
     }
-    //const RandomString = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    RoomList[req.params.roomName] = {roomName: req.params.roomName, playerSockets: [] };
-    res.json({success: true, roomName: req.params.roomName});
+    const roomSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    //RoomList[req.params.roomName] = {roomName: req.params.roomName, playerSockets: [] , roomSecret, game: new Game()};
+    RoomList[req.params.roomName] = new Room(req.params.roomName, roomSecret);
+    res.json({success: true, roomName, roomSecret});
 });
 /*
 app.post("/user/", async (req, res) => {
@@ -132,36 +141,7 @@ function median(values) {
         return (values[half-1] + values[half]) / 2.0;
 }
 
-io.on('connection', async (socket) => {
-    console.log("middleware:", socket.request._query['roomName']);
-    console.log('a user connected');
-    const roomName = socket.request._query['roomName'];
 
-    await socket.join(roomName);
-
-
-    RoomList[socket.request._query["roomName"]].playerSockets.push(socket);
-    /*RoomList[socket.request._query["roomName"]].playerSockets[RoomList[socket.request._query["roomName"]].playerSockets.length - 1].*/
-    socket.on('message', function(message) {
-        console.log("MESSAGE!");
-        socket.to(roomName).emit("reply", `${message} was sent`);
-    });
-
-    socket.on("gameData", function(data) {
-
-        datareceived.push(JSON.stringify(data).length);
-        //console.log("ARRAY SIZE - ", data.length, " TRAME SIZE  ", JSON.stringify(data).length);
-
-        console.log(datareceived);
-
-        console.log("MEDIANE ", median(datareceived));
-        socket.to(roomName).emit("gameData", data);
-    });
-
-    if (RoomList[socket.request._query["roomName"]].playerSockets.length === 1) {
-        socket.emit("newPlayerTurn");
-    }
-});
 
 
 app.get('/*', function (req, res) {
@@ -172,3 +152,7 @@ app.get('/*', function (req, res) {
 http.listen(8081, () => {
     console.log('listening on *:4242');
 });
+
+const d = new Date();
+console.log("Hello World, its ", d.getDate(), "/", d.getMonth(), " a ", d.getHours(), "h", d.getMinutes(), "m", d.getSeconds(), "s");
+Routines(RoomList);

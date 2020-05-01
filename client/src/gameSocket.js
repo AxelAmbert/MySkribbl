@@ -3,15 +3,18 @@ import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
 
 class GameSocket
 {
-    constructor(parent, URL, instructionArray, networkInstructions, gameMessageInstructions)
+    constructor(parentSetState, URL, instructionArray, networkInstructions, gameMessageInstructions)
     {
+        console.log("im build");
         this.gameMessageInstructions = gameMessageInstructions;
         this.instructionArray = instructionArray;
         this.networkInstruction = networkInstructions;
         this.interval = null;
         this.handleInstructionTimeout = null;
-        this.parent = parent;
+        this.parentSetState = parentSetState;
         this.URL = URL;
+        this.socket = null;
+        this.isSetup = false;
     }
 
     handleInstructionArray(rushMode)
@@ -54,11 +57,28 @@ class GameSocket
             clearInterval(this.interval);
     }
 
+    startGame()
+    {
+        this.socket.emit("startGame")
+    }
+
     setupSocket()
     {
         const urlParams = new URLSearchParams(window.location.search);
 
         this.socket = socketIOClient(this.URL, {reconnect: true, query: `roomName=${urlParams.get("roomName")}`});
+
+        this.socket.on("waitBeforeDraw", () => {console.log("oui jattend bisous")});
+        this.socket.on("welcome", (data) => {
+            console.log("bjr ^^ ", data);
+            this.parentSetState(
+                (_) => {
+                    return ({
+                        playerSecret: data.playerSecret,
+                        leader: data.leader
+                    });
+                });
+        });
         this.socket.on("gameData", (data) => {
 
             if (this.gameMessageInstructions["gameData"]) {
@@ -74,21 +94,66 @@ class GameSocket
             this.handleInstructionArray(NO_RUSH);
         });
 
-        this.socket.on("newPlayerTurn", () =>  {
-            if (this.gameMessageInstructions["newPlayerTurn"]) {
-                this.gameMessageInstructions["newPlayerTurn"]();
-            }
-            console.log("LETS GO!");
+        this.socket.on("wordHint", (data) => {
+           console.log("NEW HINT !", data);
+           this.parentSetState((_) => {return ({wordToGuess: data})});
+        });
+
+        this.socket.on("chooseAWord", (data) => {
+            console.log("Je dois choisir un mot zeubi !", data);
+           this.parentSetState(
+               (_) => {
+                   return ({
+                       chooseWordState: true,
+                       wordsToChoose: data.wordsToChoose
+                   });
+               }
+               );
+        });
+
+        this.socket.on("startDrawing", (data) => {
+            console.log("draw looser");
+            //data.wordToDraw;
+            this.parentSetState((_) => {
+                return ({
+                    playerTurn: true,
+                    gameNotStartedYet: false,
+                    wordToGuess: data,
+                });
+            });
             this.interval = setInterval(() => {
                 if (this.instructionArray.array.length > 2) {
+                    console.log("J'envoie ", this.instructionArray.array.length);
                     this.socket.emit("gameData", this.instructionArray.array);
                     this.instructionArray.array = [];
                     this.instructionArray.index = 0;
                 }
             }, SEND_DATA_EVERY_X_MILISECONDS);
         });
-    }
 
+        this.socket.on("newPlayerTurn", () =>  {
+            if (this.gameMessageInstructions["newPlayerTurn"]) {
+                this.gameMessageInstructions["newPlayerTurn"]();
+            }
+            console.log("LETS GO!");
+
+        });
+
+        this.socket.on("chatMessage", (messageObject) => {
+            console.log("je recois ", messageObject);
+           this.parentSetState((prevState) => {
+               prevState.chatMessages.push(messageObject);
+               return ({
+                   chatMessages: prevState.chatMessages
+               });
+           });
+        });
+        this.isSetup = true;
+    }
+    sendChatMessage(message) {
+        console.log("j'envoie chatmessage : ", message);
+        this.socket.emit("chatMessage", message);
+    }
 }
 
 export default GameSocket;

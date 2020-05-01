@@ -1,4 +1,4 @@
-import React from "react"
+import React, {useState, useEffect} from "react"
 import ActionButton from "./actionButton";
 import paintBrush from "./photorealistic-icons/paint-brush.png";
 import {BUCKET, PAINT} from "./constants";
@@ -7,128 +7,165 @@ import Grid from '@material-ui/core/Grid';
 import Container from "@material-ui/core/Container";
 import PlayerCard from "./playerCard";
 import ListOfPlayers from "./listOfPlayers";
+import ChatTextField from "./chatTextField";
+import Chat from "./chat";
+import makeStyles from "@material-ui/core/styles/makeStyles";
+import useTheme from "@material-ui/core/styles/useTheme";
+import MainCanvas from "./mainCanvas";
+import InstructionArray from "./instructionArray";
 
+const useStyles = makeStyles((theme) => ({
+    body: {
+        margin: "0px",
+    },
+
+    mainGrid: {
+        padding: "0px",
+        display: "flex",
+
+    },
+    canvasGrid: {
+        display: "flex",
+        "flex-direction": "column",
+
+    },
+    actionButtonsGrid: {
+        display: "flex",
+        "justify-content": "center",
+
+    },
+    canvas: {
+        "max-width": "100%",
+        "max-height": "100%",
+        resize: "both"
+
+    },
+    chatGrid: {
+       "position": "relative",
+        "flex-grow": "1",
+        "max-height": "600px",
+    },
+    wordToGuess: {
+        "background-color": "#363636",
+        "color" : "white",
+        display: "flex",
+        "justify-content": "center",
+        "font-size": "24px",
+        "margin" : "0px",
+        "padding": "0px",
+    }
+}));
 
 const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
 
-class Menu extends React.Component {
+const Menu = (props) => {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            joinRoomText: "",
-            newRoomText: "",
-            playersList: [{name: "ok", score: 1003}]
-        };
-    }
+    const classes = useStyles();
+    const theme = useTheme();
+    let canvasRef = null;
+    const [state, setState] = useState({
+        joinRoomText: "",
+        newRoomText: "",
+        playersList: [{name: "ok", score: 1003}],
+        instructionArray: new InstructionArray(),
+    });
 
+    useEffect(() => {
+       /* if (canvasRef) {
+            const ctx = canvasRef.getContext("2d");
 
-    newRoomCallback(result) {
+            ctx.beginPath();
+            ctx.rect(0, 0, 800, 600);
+            ctx.fillStyle = "blue";
+            ctx.fill();
+        }*/
+    });
+
+    const newRoomCallback = (result) => {
         if (result.success === true) {
-            this.props.history.push(`/game?roomName=${result.roomName}`);
+            props.history.push(`/game?roomName=${result.roomName}`);
         } else {
             alert(`Something went wrong : ${result.error}`)
         }
-    }
-
-    joinRoomCallback(result) {
-        console.log("res ", result);
-        if (result.success === true) {
-            this.props.history.push(`/game?roomName=${result.roomName}`);
-        } else {
-            alert(`Something went wrong : ${result.error}`)
-        }
-    }
-
-    newRoom() {
-
-        if (this.state.newRoomText.length === 0) {
-            alert("Please enter a roomName");
-            return;
-        }
-
-        fetch(`${AWS_URL}/newroom/${this.state.newRoomText}/`, {mode: 'no-cors'})
-            .then(res => res.json())
-            .then(this.newRoomCallback.bind(this));
     };
 
-    joinRoom() {
-        console.log("lol");
-        if (this.state.joinRoomText.length === 0) {
+    const joinRoomCallback = (result) => {
+        console.log("res ", result);
+        if (result.success === true) {
+            props.history.push(`/game?roomName=${result.roomName}`);
+        } else {
+            alert(`Something went wrong : ${result.error}`)
+        }
+    };
+
+    const newRoom = () => {
+
+        if (state.newRoomText.length === 0) {
             alert("Please enter a roomName");
             return;
         }
 
-        fetch(`${AWS_URL}/joinroom/${this.state.joinRoomText}/`, {mode: 'no-cors'})
+        fetch(`${AWS_URL}/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
+            .then(res => res.json())
+            .then(res => newRoomCallback(res));
+    };
+
+    const joinRoom = () => {
+        console.log("lol");
+        if (state.joinRoomText.length === 0) {
+            alert("Please enter a roomName");
+            return;
+        }
+
+        fetch(`${AWS_URL}/joinroom/${state.joinRoomText}/`, {mode: 'no-cors'})
             .then((res) => {
                 console.log(res);
                 return (res.json())
             })
-            .then(this.joinRoomCallback.bind(this));
+            .then(res => joinRoomCallback(res));
     };
 
 
-    componentDidMount() {
-        // 0var ctx = this.canvasRef.getContext("2d");
-        //ctx.fillStyle = "#FF0000";
-        //ctx.fillRect(0, 0, 800, 600);
+    const elements = (
 
-    }
+        <div>
 
-    render() {
-
-        const elements = (
-
-            <div>
-
-                <input class="myButton" placeholder="Enter new room name name"
-                       onChange={(value) => this.setState({newRoomText: value.target.value})}/>
-                <input name="Submit" type="submit" onClick={this.newRoom.bind(this)}/>
+            <input class="myButton" placeholder="Enter new room name name"
+                   onChange={(value) => setState({newRoomText: value.target.value})}/>
+            <input name="Submit" type="submit" onClick={() => newRoom()}/>
 
 
-                <input class="myButton" id="joinRoomName" placeholder="Enter existing room name"
-                       onChange={(value) => this.setState({joinRoomText: value.target.value})}/>
-                <input name="Submit" type="submit" onClick={this.joinRoom.bind(this)}/>
-            </div>
+            <input class="myButton" id="joinRoomName" placeholder="Enter existing room name"
+                   onChange={(value) => setState({joinRoomText: value.target.value})}/>
+            <input name="Submit" type="submit" onClick={() => joinRoom()}/>
+        </div>
 
-        );
-        return (
-            [
-                elements,
-                <ListOfPlayers playersInfos={this.state.playersList}/>,
-                <div style={{width: 800}}>
-                    <Grid container wrap={"wrap"}>
-                        <Grid item>
-                            <canvas id="myCanvas" width="800" height="600" ref={ref => {
-                                this.canvasRef = ref;
-                            }}>
-                                Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
-                            </canvas>
-                            ,
-                        </Grid>
-                        <Grid container alignItems="flex-start" justify="flex-end">
-                            <Grid item>
-                                <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>}/>,
-                            </Grid>
-                            <Grid item>
-                                <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>}/>,
-                                <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>}
-                                              trigger={() => {
-                                                  this.setState((prev) => {
-                                                      return ({
-                                                          playersList: [...prev.playersList, {name: "lol", score: 1250}]
-                                                      })
-                                                  });
-                                              }}/>,
-                            </Grid>
-                        </Grid>
-                    </Grid>
+    );
+
+    return (
+        [elements,/*
+            <div className={classes.mainGrid}>
+                <ListOfPlayers playersInfos={state.playersList}/>
+                <div className={classes.canvasGrid}>
+                    <MainCanvas ref={ref => canvasRef = ref} blocked={false}
+                                instructionArray={state.instructionArray}/>
+                    <div className={classes.actionButtonsGrid}>
+                        <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            console.log("go for paint ", PAINT);
+                        }}/>
+                        <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            console.log("go for bucket");
+
+                        }}/>
+                    </div>
                 </div>
-            ]
-        );
-    }
-
-}
+                <div className={classes.chatGrid}>
+                    <Chat  chatMessages={[{text: "ax", color: "green"}]}/>
+                </div>
+            </div>*/
+        ]
+    );
+};
 
 
 export default Menu
