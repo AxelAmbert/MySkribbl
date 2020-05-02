@@ -13,6 +13,12 @@ import makeStyles from "@material-ui/core/styles/makeStyles";
 import useTheme from "@material-ui/core/styles/useTheme";
 import MainCanvas from "./mainCanvas";
 import InstructionArray from "./instructionArray";
+import "./index.css";
+import Paper from "@material-ui/core/Paper";
+import Button from "@material-ui/core/Button";
+import Box from "@material-ui/core/Box";
+import WordsToChoose from "./wordsToChoose";
+
 
 const useStyles = makeStyles((theme) => ({
     body: {
@@ -32,7 +38,6 @@ const useStyles = makeStyles((theme) => ({
     actionButtonsGrid: {
         display: "flex",
         "justify-content": "center",
-
     },
     canvas: {
         "max-width": "100%",
@@ -41,19 +46,21 @@ const useStyles = makeStyles((theme) => ({
 
     },
     chatGrid: {
-       "position": "relative",
+        "position": "relative",
         "flex-grow": "1",
         "max-height": "600px",
     },
     wordToGuess: {
         "background-color": "#363636",
-        "color" : "white",
+        "color": "white",
         display: "flex",
         "justify-content": "center",
         "font-size": "24px",
-        "margin" : "0px",
+        "margin": "0px",
         "padding": "0px",
-    }
+    },
+
+
 }));
 
 const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
@@ -71,14 +78,14 @@ const Menu = (props) => {
     });
 
     useEffect(() => {
-       /* if (canvasRef) {
-            const ctx = canvasRef.getContext("2d");
+        /* if (canvasRef) {
+             const ctx = canvasRef.getContext("2d");
 
-            ctx.beginPath();
-            ctx.rect(0, 0, 800, 600);
-            ctx.fillStyle = "blue";
-            ctx.fill();
-        }*/
+             ctx.beginPath();
+             ctx.rect(0, 0, 800, 600);
+             ctx.fillStyle = "blue";
+             ctx.fill();
+         }*/
     });
 
     const newRoomCallback = (result) => {
@@ -127,7 +134,6 @@ const Menu = (props) => {
 
 
     const elements = (
-
         <div>
 
             <input class="myButton" placeholder="Enter new room name name"
@@ -147,8 +153,12 @@ const Menu = (props) => {
             <div className={classes.mainGrid}>
                 <ListOfPlayers playersInfos={state.playersList}/>
                 <div className={classes.canvasGrid}>
-                    <MainCanvas ref={ref => canvasRef = ref} blocked={false}
-                                instructionArray={state.instructionArray}/>
+                    <div className={"canvasGuessWordContainer"}>
+                        <WordsToChoose words={["mdr", "lol", "hihi"]} display={true} />
+                        <MainCanvas ref={ref => canvasRef = ref} blocked={false}
+                                    instructionArray={state.instructionArray} className={classes.mainCanvas}>
+                        </MainCanvas>
+                    </div>
                     <div className={classes.actionButtonsGrid}>
                         <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
                             console.log("go for paint ", PAINT);
@@ -160,7 +170,7 @@ const Menu = (props) => {
                     </div>
                 </div>
                 <div className={classes.chatGrid}>
-                    <Chat  chatMessages={[{text: "ax", color: "green"}]}/>
+                    <Chat chatMessages={[{text: "ax", color: "green"}]}/>
                 </div>
             </div>*/
         ]

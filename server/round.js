@@ -10,10 +10,22 @@ class Round {
         this.hintInterval = null;
     }
 
+    reset() {
+        if (this.chooseWordTimeout)
+            clearTimeout(this.chooseWordTimeout);
+        if (this.hintInterval)
+            clearInterval(this.hintInterval);
+        this.parentRoom.players.forEach((player) => {
+            player.hasFoundWord = false;
+        });
+        this.choosenWord = "";
+        this.slicedWord = "";
+    }
+
     getNextPlayerToDraw() {
         if (this.parentRoom.players.length === 0)
             return null;
-        if (this.parentRoom.playerDrawing >= this.parentRoom.players) {
+        if (this.parentRoom.playerDrawing >= this.parentRoom.players.length) {
             this.parentRoom.playerDrawing = 0;
         }
         const nextPlayerToDraw = this.parentRoom.players[this.parentRoom.playerDrawing];
@@ -24,8 +36,10 @@ class Round {
     ReplaceAt(input, index, replacement) {
         return input.substr(0, index) + replacement+ input.substr(index + replacement.length);
     }
+
+
+
     getAnHint() {
-        console.log("BEFORE ", this.slicedWord);
         let gardeFou = 0;
 
         while (gardeFou < 30) {
@@ -38,10 +52,10 @@ class Round {
             gardeFou++;
         }
         this.drawingPlayer.socket.to(this.parentRoom.roomName).emit("wordHint", this.slicedWord);
-        console.log("AFTER ", this.slicedWord);
     }
 
-    startToDraw() {
+    startToDraw(word) {
+        this.choosenWord = word;
         for (let i = 0; i < this.choosenWord.length; i++) {
             if (this.choosenWord.charAt(i) === " ") {
                 this.slicedWord = this.slicedWord + " ";
@@ -55,6 +69,7 @@ class Round {
         this.hintInterval = setInterval(() => {
             this.getAnHint();
         }, 10000);
+        this.chooseWordTimeout = null;
     }
 
     startARound() {
@@ -64,15 +79,16 @@ class Round {
         if (this.drawingPlayer === null)
             return timeout;
         this.choosenWord = "";
+        this.slicedWord = "";
         this.pendingWords = this.parentRoom.wordBank.getRandomWords(3);
         this.drawingPlayer.socket.emit("chooseAWord", {wordsToChoose: this.pendingWords});
         this.drawingPlayer.socket.to(this.parentRoom.roomName).emit("waitBeforeDraw");
         this.chooseWordTimeout = setTimeout(
             () => {
-                this.choosenWord = this.pendingWords[Math.floor(Math.random() * (2))];
-                this.startToDraw();
-            }, 2000);
-        return (timeout);
+                const word = this.pendingWords[Math.floor(Math.random() * (3))];
+                this.startToDraw(word);
+            }, 20000);
+        return (this.chooseWordTimeout);
     }
 }
 

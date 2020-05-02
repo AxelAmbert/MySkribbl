@@ -14,11 +14,6 @@ class  ServerMainSocket {
     }
 
     onGameData(roomName, socket, data) {
-        console.log("gamedata");
-        console.log(data);
-        console.log(roomName);
-        console.log(socket);
-        console.log(typeof(socket));
         socket.to(roomName).emit("gameData", data);
     }
 
@@ -52,6 +47,8 @@ class  ServerMainSocket {
             socket.on("gameData", this.onGameData.bind(this, roomName, socket));
 
             socket.on("startGame", PlayerRoom.startGame.bind(PlayerRoom));
+
+            socket.on("chooseWord", PlayerRoom.chooseWord.bind(PlayerRoom));
 
             socket.emit("welcome", {
                 leader: PlayerRoom.players.length === 1,

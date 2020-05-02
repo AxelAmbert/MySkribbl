@@ -1,5 +1,6 @@
 import socketIOClient from "socket.io-client";
 import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
+import InstructionArray from "./instructionArray";
 
 class GameSocket
 {
@@ -62,13 +63,30 @@ class GameSocket
         this.socket.emit("startGame")
     }
 
+    chooseWord(word) {
+        this.socket.emit("chooseWord", word);
+    }
+
     setupSocket()
     {
         const urlParams = new URLSearchParams(window.location.search);
 
         this.socket = socketIOClient(this.URL, {reconnect: true, query: `roomName=${urlParams.get("roomName")}`});
 
-        this.socket.on("waitBeforeDraw", () => {console.log("oui jattend bisous")});
+        this.socket.on("waitBeforeDraw", () => {
+            if (this.interval) {
+                clearInterval(this.interval);
+                this.interval = null;
+            }
+            this.parentSetState(
+                (_) => {
+                    return ({
+                        chooseWordState: false,
+                        playerTurn: false,
+                        gameNotStartedYet: false,
+                    });
+                });
+        });
         this.socket.on("welcome", (data) => {
             console.log("bjr ^^ ", data);
             this.parentSetState(
@@ -115,10 +133,13 @@ class GameSocket
             console.log("draw looser");
             //data.wordToDraw;
             this.parentSetState((_) => {
+                this.instructionArray.array = [];
+                this.instructionArray.index = 0;
                 return ({
                     playerTurn: true,
                     gameNotStartedYet: false,
                     wordToGuess: data,
+                    chooseWordState: false,
                 });
             });
             this.interval = setInterval(() => {

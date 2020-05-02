@@ -2,16 +2,18 @@ import React from "react";
 
 import pixel from "./pixel";
 import {PAINT, BUCKET, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
+import "./index.css";
 
 const clamp = (min, max, val) => Math.min(Math.max(min, val), max);
 
 class MainCanvas extends React.Component {
 
     constructor(props) {
+        console.log("construct maincavas ");
         super(props);
-        console.log("oh ???");
         this.selectedAction = PAINT;
         this.once = true;
+        this.previouslyBlocked = false;
         this.bucketDoing = false;
         this.choosenColor = [0, 0, 0];
         this.t0 = performance.now();
@@ -25,13 +27,12 @@ class MainCanvas extends React.Component {
         this.height = 600;
 
         if (this.props.blocked !== true) {
-            console.log("oh zeubo");
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
         }
 
-        this.timeoutInterval =  setInterval(() => {
+        this.timeoutInterval = setInterval(() => {
 
 
             // Reset the timer if the user don't draw for a long time
@@ -50,18 +51,14 @@ class MainCanvas extends React.Component {
             x: (mouse.clientX - rect.left) / (rect.right - rect.left) * this.canvasRef.width,
             y: (mouse.clientY - rect.top) / (rect.bottom - rect.top) * this.canvasRef.height
         };
-
-
     }
 
-    isSameColor(arr, x, y, color)
-    {
+    isSameColor(arr, x, y, color) {
         //console.log("color ", arr[x * y * 4 + 3] !== 0);
         return (arr[(y * this.width + x) * 4 + 3] !== 0);
     }
 
-    isWhiteColor(arr, x, y)
-    {
+    isWhiteColor(arr, x, y) {
         return (arr[(y * this.width + x) * 4] === 255 &&
             arr[(y * this.width + x) * 4 + 1] === 255 &&
             arr[(y * this.width + x) * 4 + 2] === 255 &&
@@ -104,19 +101,18 @@ class MainCanvas extends React.Component {
             if (yToTest - 1 >= 0)
                 nodeList.push({x: xToTest, y: yToTest - 1});
         }
-        console.log("ACTIONS ? ", actions);
         const tmpT1 = performance.now();
         // console.log(pixels);
         //this.fillIt(pixels, x, y);
         this.ctx.putImageData(imgData, 0, 0);
         const tmpT2 = performance.now();
-        console.log(" FILL : ", tmpT1 - tmpT0, " SET IMAGE ", tmpT2 - tmpT1);
-        setTimeout(() => {this.bucketDoing = false}, 1000);
+        setTimeout(() => {
+            this.bucketDoing = false
+        }, 1000);
     }
 
 
-    drawPixel()
-    {
+    drawPixel() {
         const pixel = this.props.instructionArray.array[this.props.instructionArray.index];
 
         this.ctx.beginPath(); // begin
@@ -128,14 +124,11 @@ class MainCanvas extends React.Component {
         this.ctx.stroke(); // draw it!
     }
 
-    handlePlayerDrawing(mouse)
-    {
-        console.log("???");
+    handlePlayerDrawing(mouse) {
         let calculateTimeout = 0;
 
-        if (mouse.buttons !== 1  || this.selectedAction !== PAINT || this.props.blocked)
+        if (mouse.buttons !== 1 || this.selectedAction !== PAINT || this.props.blocked)
             return;
-        console.log("go");
         this.ctx.beginPath(); // begin
         const oldpos = {x: this.pos.x, y: this.pos.y};
         this.ctx.moveTo(this.pos.x, this.pos.y); // from
@@ -152,17 +145,22 @@ class MainCanvas extends React.Component {
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
-        console.log("UP ", this.props.blocked);
+        if (this.previouslyBlocked === true && this.props.blocked === false)
+            this.previouslyBlocked = false;
+
         if (this.props.blocked !== true && !this.mouseMoveEvent) {
-            console.log("oh zeubo3");
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
+        } else if (this.props.blocked && this.previouslyBlocked === false) {
+            this.previouslyBlocked = true;
+            this.ctx.fillStyle = "white";
+            this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
         }
     }
 
     componentDidMount() {
-        this.offset = {x: this.canvasRef.offsetLeft , y: this.canvasRef.offsetTop};
+        this.offset = {x: this.canvasRef.offsetLeft, y: this.canvasRef.offsetTop};
         this.ctx = this.canvasRef.getContext("2d");
         this.ctx.strokeStyle = '#000000';
         this.ctx.lineWidth = 3;
@@ -171,7 +169,6 @@ class MainCanvas extends React.Component {
             this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
             this.once = false;
         }
-        console.log("didmount");
     }
 
     componentWillUnmount() {
@@ -183,11 +180,9 @@ class MainCanvas extends React.Component {
             this.mouseMoveEvent.remove();
         if (this.timeoutInterval)
             clearInterval(this.timeoutInterval);
-        console.log("unmount");
     }
 
-    handleClickOnCanvas(mouse)
-    {
+    handleClickOnCanvas(mouse) {
         this.setPosition(mouse);
 
         if (this.props.blocked) {
@@ -202,21 +197,23 @@ class MainCanvas extends React.Component {
         }
     }
 
-    changeSelectedAction(selectedAction)
-    {
+    changeSelectedAction(selectedAction) {
         this.selectedAction = selectedAction;
     }
 
-    getCanvas()
-    {
+    getCanvas() {
         return (this.canvasRef);
     }
 
     render() {
         return (
-            <canvas id="myCanvas" width="800" height="600" ref={ref => {this.canvasRef = ref;}} onClick={this.handleClickOnCanvas.bind(this)} >
-                Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
-            </canvas>
+
+                <canvas className={"mainCanvas"} width="800" height="600" ref={ref => {
+                    this.canvasRef = ref;
+                }} onClick={this.handleClickOnCanvas.bind(this)}>
+                    Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
+                </canvas>
+
         );
     }
 }

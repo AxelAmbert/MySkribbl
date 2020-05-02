@@ -14,6 +14,8 @@ import Chat from "./chat";
 import ListOfPlayers from "./listOfPlayers";
 import Grid from "@material-ui/core/Grid";
 import makeStyles from "@material-ui/core/styles/makeStyles";
+import WordsToChoose from "./wordsToChoose";
+
 const {useEffect} = require("react");
 
 
@@ -51,11 +53,11 @@ const useStyles = makeStyles((theme) => ({
     },
     wordToGuess: {
         "background-color": "#363636",
-        "color" : "white",
+        "color": "white",
         display: "flex",
         "justify-content": "center",
         "font-size": "24px",
-        "margin" : "0px",
+        "margin": "0px",
         "padding": "0px",
     },
 }));
@@ -65,7 +67,8 @@ const Game = () => {
     const classes = useStyles();
     const urlParams = new URLSearchParams(window.location.search);
     const roomName = urlParams.get("roomName");
-    let changeSelectedActionCanvasWrapper = _ => {};
+    let changeSelectedActionCanvasWrapper = _ => {
+    };
     let gameServerInstruction = null;
     let messageServerInstruction = null;
     let canvasRef = null;
@@ -86,18 +89,8 @@ const Game = () => {
     });
 
 
-
-
     const customSetState = (valuesToChange) => {
         setState(prevState => {
-            for (const key in valuesToChange) {
-                if (valuesToChange.hasOwnProperty(key)) {
-                    console.log("je change ", prevState[key], "en", valuesToChange[key]);
-                }
-            }
-            const newv = {...prevState, ...valuesToChange};
-
-            console.log("GO -> ", newv);
             return ({...prevState, ...valuesToChange});
         });
     };
@@ -116,8 +109,7 @@ const Game = () => {
     const handleNoAccessCanvas = () => {
         if (state.playerTurn === false)
             return;
-        setState((prev) =>
-        {
+        setState((prev) => {
             prev.playerTurn = false;
             return (prev);
         });
@@ -127,7 +119,11 @@ const Game = () => {
     useEffect(() => {
         changeSelectedActionCanvasWrapper = canvasRef.changeSelectedAction.bind(canvasRef);
         gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef)];
-        messageServerInstruction = {"newPlayerTurn": () => {handleNewPlayerTurn();}};
+        messageServerInstruction = {
+            "newPlayerTurn": () => {
+                handleNewPlayerTurn();
+            }
+        };
         if (!state.socket) {
             customSetState({socket: new GameSocket(callbackCaller, AWS_URL, state.instructionArray, gameServerInstruction, messageServerInstruction)});
         } else if (!state.socket.isSetup) {
@@ -145,7 +141,6 @@ const Game = () => {
     });
 
 
-
     if (state.gameNotStartedYet && state.leader) {
         startGameButton =
             <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>}
@@ -159,8 +154,10 @@ const Game = () => {
             <ListOfPlayers playersInfos={state.playersList}/>,
             <div className={classes.canvasGrid}>
                 <p className={classes.wordToGuess}> {state.wordToGuess} </p>
-                <MainCanvas ref={ref => canvasRef = ref} blocked={!state.playerTurn}
-                            instructionArray={state.instructionArray}/>
+                <div className={"canvasGuessWordContainer"}>
+                    <WordsToChoose words={state.wordsToChoose} display={state.chooseWordState} trigger={(word) => {state.socket.chooseWord(word)}}/>
+                    <MainCanvas ref={ref => canvasRef = ref} blocked={!state.playerTurn} instructionArray={state.instructionArray}/>
+                </div>
                 <div className={classes.actionButtonsGrid}>
                     <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
                         console.log("go for paint ", PAINT);
@@ -179,115 +176,115 @@ const Game = () => {
                 }}/>
             </div>
         </div>
-            /*
-                <Chat chatMessages={state.chatMessages} sendMessageTrigger={(message) => {
-                    socket.sendChatMessage(message);
-                }}/>,
-                <MainCanvas ref={ref => canvasRef = ref} blocked={!state.playerTurn}
-                            instructionArray={instructionArray}/>,
-                <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
-                    console.log("go for paint ", PAINT);
-                    changeSelectedActionCanvasWrapper(PAINT)
-                }}/>,
-                <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
-                    console.log("go for bucket");
-                    changeSelectedActionCanvasWrapper(BUCKET)
-                }}/>,
-                startGameButton,
-                <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
+        /*
+            <Chat chatMessages={state.chatMessages} sendMessageTrigger={(message) => {
+                socket.sendChatMessage(message);
+            }}/>,
+            <MainCanvas ref={ref => canvasRef = ref} blocked={!state.playerTurn}
+                        instructionArray={instructionArray}/>,
+            <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
+                console.log("go for paint ", PAINT);
+                changeSelectedActionCanvasWrapper(PAINT)
+            }}/>,
+            <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
+                console.log("go for bucket");
+                changeSelectedActionCanvasWrapper(BUCKET)
+            }}/>,
+            startGameButton,
+            <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
 
-                    //canvasRef.getCanvas().toDataURL('image/jpeg', 1.0);
-                    canvasRef.getCanvas().toBlob(
-                        (TheFile) => {
-                            console.log("FILE ?");
-                            console.log(TheFile.name);
-                            console.log(TheFile.size);
+                //canvasRef.getCanvas().toDataURL('image/jpeg', 1.0);
+                canvasRef.getCanvas().toBlob(
+                    (TheFile) => {
+                        console.log("FILE ?");
+                        console.log(TheFile.name);
+                        console.log(TheFile.size);
 
-                            imageCompression(TheFile, {
-                                maxSizeMB: 1,
-                                maxWidthOrHeight: Math.ceil(800 / 3),
-                                fileType: "jpg"
-                            }).then(
-                                (TheFile2) => {
-                                    console.log("FILE2 ?");
-                                    console.log(TheFile2.name);
-                                    console.log(TheFile2.size);
+                        imageCompression(TheFile, {
+                            maxSizeMB: 1,
+                            maxWidthOrHeight: Math.ceil(800 / 3),
+                            fileType: "jpg"
+                        }).then(
+                            (TheFile2) => {
+                                console.log("FILE2 ?");
+                                console.log(TheFile2.name);
+                                console.log(TheFile2.size);
 
-                                    // The third parameter is required for server
-                                    const reader = new FileReader();
+                                // The third parameter is required for server
+                                const reader = new FileReader();
 
-                                    reader.onload = function (event) {
+                                reader.onload = function (event) {
 
-                                        console.log("?");
-                                        console.log(reader.result, ", ", reader.result.length);
-                                        axios({
-                                            method: "post",
-                                            url: `${AWS_URL}/photo/`,
-                                            data: {data: reader.result}
-                                        }).then(() => {
-                                            console.log('Upload success');
-                                        }).catch(function (error) {
-                                            console.log("error :", error);
-                                        });
-                                    };
-                                    reader.readAsDataURL(TheFile2);
-                                    console.log("FILE ? -> ", TheFile2);
-                                    // Send the compressed image file to server with XMLHttpRequest.
-                                }
-                            )
-                        }
-                    )
-
-                }}/>,
-                <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
-                    canvasRef.getCanvas().toBlob(
-                        (Blob) => {
-                            if (!Blob) {
-                                console.log("No blob...");
-                                return;
+                                    console.log("?");
+                                    console.log(reader.result, ", ", reader.result.length);
+                                    axios({
+                                        method: "post",
+                                        url: `${AWS_URL}/photo/`,
+                                        data: {data: reader.result}
+                                    }).then(() => {
+                                        console.log('Upload success');
+                                    }).catch(function (error) {
+                                        console.log("error :", error);
+                                    });
+                                };
+                                reader.readAsDataURL(TheFile2);
+                                console.log("FILE ? -> ", TheFile2);
+                                // Send the compressed image file to server with XMLHttpRequest.
                             }
-                            console.log("BLOB ? -> ", Blob);
-                            new Compressor(Blob, {
-                                quality: 0.4,
-                                maxHeight: 200,
-                                maxWidth: Math.ceil(800 / 3),
-                                success(result) {
+                        )
+                    }
+                )
 
-                                    const reader = new FileReader();
-
-                                    reader.onload = function (event) {
-                                        console.log("?");
-                                        console.log("base ", reader.result);
-                                        axios({
-                                            method: "post",
-                                            url: `${AWS_URL}/photo/`,
-                                            data: {data: reader.result}
-                                        }).then(() => {
-                                            console.log('Upload success');
-                                        }).catch(function (error) {
-                                            console.log("error :", error);
-                                        });
-                                    };
-                                    reader.readAsDataURL(result);
-                                },
-                                error(err) {
-                                    console.log(err.message);
-                                },
-                            });
+            }}/>,
+            <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
+                canvasRef.getCanvas().toBlob(
+                    (Blob) => {
+                        if (!Blob) {
+                            console.log("No blob...");
+                            return;
                         }
-                    );
+                        console.log("BLOB ? -> ", Blob);
+                        new Compressor(Blob, {
+                            quality: 0.4,
+                            maxHeight: 200,
+                            maxWidth: Math.ceil(800 / 3),
+                            success(result) {
+
+                                const reader = new FileReader();
+
+                                reader.onload = function (event) {
+                                    console.log("?");
+                                    console.log("base ", reader.result);
+                                    axios({
+                                        method: "post",
+                                        url: `${AWS_URL}/photo/`,
+                                        data: {data: reader.result}
+                                    }).then(() => {
+                                        console.log('Upload success');
+                                    }).catch(function (error) {
+                                        console.log("error :", error);
+                                    });
+                                };
+                                reader.readAsDataURL(result);
+                            },
+                            error(err) {
+                                console.log(err.message);
+                            },
+                        });
+                    }
+                );
 
 
 
-                }}/>*/
-            /*<button className="favorite styled"
-                    type="button"
-                    onClick={
-                        () =>
-                        {console.log("clicj");
-                            setState({playerTurn: state.playerTurn === true ? false : true})}}>
-                Add to favorites
-            </button>*/
+            }}/>*/
+        /*<button className="favorite styled"
+                type="button"
+                onClick={
+                    () =>
+                    {console.log("clicj");
+                        setState({playerTurn: state.playerTurn === true ? false : true})}}>
+            Add to favorites
+        </button>*/
     );
 };
 

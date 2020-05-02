@@ -2,6 +2,67 @@ body {
     font: 14px "Comic Sans MS";
     margin: 0px;
 }
+
+.overit {
+    position: absolute;
+}
+
+.chooseWord {
+    width: 800px;
+    height: 600px;
+    background: rgba(225, 0, 0, .5);
+    z-index: 2;
+    position: absolute;
+}
+.mainCanvas, .chooseWord {
+
+}
+
+.test {
+    position: absolute;
+}
+
+.mainCanvas {
+    position: absolute;
+
+}
+
+.papersdiv {
+    z-index: 2000;
+    position: absolute;
+    margin-left: auto;
+    margin-right: auto;
+    top: 50%;
+    left: 50%;
+    -ms-transform: translateX(-50%) translateY(-50%);
+    -webkit-transform: translate(-50%,-50%);
+    transform: translate(-50%,-50%);
+    display: flex;
+    flex-direction: row;
+
+}
+
+.MuiButton-text {
+    font-family: "Comic Sans MS";
+    margin: 0 100px 0 0;
+}
+
+.papers {
+    display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    padding: 0 10px 0 10px;
+    background: red;
+    z-index: 1003;
+    justify-content: center; /* center flex items horizontally, in this case */
+}
+
+.canvasGuessWordContainer {
+        position: relative;
+    width: 800px;
+    height: 600px;
+
+}
 /*
 ol, ul {
     padding-left: 30px;
