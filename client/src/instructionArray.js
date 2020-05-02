@@ -3,6 +3,7 @@ class InstructionArray {
     {
         this.array = [];
         this.index = 0;
+        this.goFlag = false;
     }
 }
 

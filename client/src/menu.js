@@ -3,6 +3,19 @@ import ActionButton from "./actionButton";
 import paintBrush from "./photorealistic-icons/paint-brush.png";
 import {BUCKET, PAINT} from "./constants";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
+import eraser from "./photorealistic-icons/eraser.png";
+
+/* COLORS */
+
+import black from "./photorealistic-icons/000000.png";
+import blue from "./photorealistic-icons/00FFFF.png";
+import purple from "./photorealistic-icons/5500FF.png";
+import softpink from "./photorealistic-icons/CC99FF.png";
+import shinypink from "./photorealistic-icons/FF00FF.png";
+import orange from "./photorealistic-icons/FF9900.png";
+
+
+
 import Grid from '@material-ui/core/Grid';
 import Container from "@material-ui/core/Container";
 import PlayerCard from "./playerCard";
@@ -18,6 +31,7 @@ import Paper from "@material-ui/core/Paper";
 import Button from "@material-ui/core/Button";
 import Box from "@material-ui/core/Box";
 import WordsToChoose from "./wordsToChoose";
+import ChangeColor from "./changeColor";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -154,18 +168,53 @@ const Menu = (props) => {
                 <ListOfPlayers playersInfos={state.playersList}/>
                 <div className={classes.canvasGrid}>
                     <div className={"canvasGuessWordContainer"}>
-                        <WordsToChoose words={["mdr", "lol", "hihi"]} display={true} />
+                        <WordsToChoose words={["mdr", "lol", "hihi"]} display={false} />
                         <MainCanvas ref={ref => canvasRef = ref} blocked={false}
                                     instructionArray={state.instructionArray} className={classes.mainCanvas}>
                         </MainCanvas>
                     </div>
                     <div className={classes.actionButtonsGrid}>
                         <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeSelectedAction(PAINT);
+
                             console.log("go for paint ", PAINT);
                         }}/>
                         <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeSelectedAction(BUCKET);
                             console.log("go for bucket");
 
+                        }}/>
+                        <ActionButton img={<img src={eraser} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#FFFFFF");
+                            console.log("go for bucket");
+
+                        }}/>
+
+                    </div>
+                    <div className={classes.actionButtonsGrid}>
+                        <ActionButton img={<img src={black} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#000000");
+                            state.instructionArray.array.push(new ChangeColor("#000000"));
+                        }}/>
+                        <ActionButton img={<img src={blue} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#00FFFF");
+                            state.instructionArray.array.push(new ChangeColor("#00FFFF"));
+                        }}/>
+                        <ActionButton img={<img src={purple} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#5500FF");
+                            state.instructionArray.array.push(new ChangeColor("#5500FF"));
+                        }}/>
+                        <ActionButton img={<img src={softpink} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#CC99FF");
+                            state.instructionArray.array.push(new ChangeColor("#CC99FF"));
+                        }}/>
+                        <ActionButton img={<img src={shinypink} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#FF00FF");
+                            state.instructionArray.array.push(new ChangeColor("#FF00FF"));
+                        }}/>
+                        <ActionButton img={<img src={orange} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.changeColor("#FF9900");
+                            state.instructionArray.array.push(new ChangeColor("#FF9900"));
                         }}/>
                     </div>
                 </div>

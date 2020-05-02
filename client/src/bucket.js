@@ -1,7 +1,7 @@
 import "./constants";
 import {BUCKET} from "./constants";
 
-class bucket {
+class Bucket {
     constructor(x, y) {
         this.x = x;
         this.y = y;
@@ -9,4 +9,4 @@ class bucket {
     }
 }
 
-export default bucket;
+export default Bucket;

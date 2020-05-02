@@ -5,6 +5,17 @@ import InstructionArray from "./instructionArray";
 import ActionButton from "./actionButton";
 import paintBrush from "./photorealistic-icons/paint-brush.png";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
+import eraser from "./photorealistic-icons/eraser.png";
+
+/* COLORS */
+
+import black from "./photorealistic-icons/000000.png";
+import blue from "./photorealistic-icons/00FFFF.png";
+import purple from "./photorealistic-icons/5500FF.png";
+import softpink from "./photorealistic-icons/CC99FF.png";
+import shinypink from "./photorealistic-icons/FF00FF.png";
+import orange from "./photorealistic-icons/FF9900.png";
+
 import './index.css';
 import {AWS_URL, BUCKET, PAINT} from "./constants";
 import imageCompression from 'browser-image-compression';
@@ -15,6 +26,8 @@ import ListOfPlayers from "./listOfPlayers";
 import Grid from "@material-ui/core/Grid";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import WordsToChoose from "./wordsToChoose";
+import ChangeColor from "./changeColor";
+
 
 const {useEffect} = require("react");
 
@@ -118,7 +131,7 @@ const Game = () => {
 
     useEffect(() => {
         changeSelectedActionCanvasWrapper = canvasRef.changeSelectedAction.bind(canvasRef);
-        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef)];
+        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef), canvasRef.bucketWrapper.bind(canvasRef), canvasRef.changeColorWrapper.bind(canvasRef)];
         messageServerInstruction = {
             "newPlayerTurn": () => {
                 handleNewPlayerTurn();
@@ -139,8 +152,6 @@ const Game = () => {
                               }}/>;
         }
     });
-
-
     if (state.gameNotStartedYet && state.leader) {
         startGameButton =
             <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>}
@@ -167,7 +178,38 @@ const Game = () => {
                         console.log("go for bucket");
                         changeSelectedActionCanvasWrapper(BUCKET)
                     }}/>
+                    <ActionButton img={<img src={eraser} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#FFFFFF");
+                        state.instructionArray.array.push(new ChangeColor("#FFFFFF"));
+                    }}/>
                     {startGameButton}
+                </div>
+                <div className={classes.actionButtonsGrid}>
+                    <ActionButton img={<img src={black} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#000000");
+                        state.instructionArray.array.push(new ChangeColor("#000000"));
+                    }}/>
+                    <ActionButton img={<img src={blue} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#00FFFF");
+                        state.instructionArray.array.push(new ChangeColor("#00FFFF"));
+                    }}/>
+                    <ActionButton img={<img src={purple} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#5500FF");
+                        state.instructionArray.array.push(new ChangeColor("#5500FF"));
+                    }}/>
+                    <ActionButton img={<img src={softpink} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#CC99FF");
+                        state.instructionArray.array.push(new ChangeColor("#CC99FF"));
+                    }}/>
+                    <ActionButton img={<img src={shinypink} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#FF00FF");
+                        state.instructionArray.array.push(new ChangeColor("#FF00FF"));
+                    }}/>
+                    <ActionButton img={<img src={orange} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeColor("#FF9900");
+                        state.instructionArray.array.push(new ChangeColor("#FF9900"));
+                    }}/>
+
                 </div>
             </div>
             <div className={classes.chatGrid}>

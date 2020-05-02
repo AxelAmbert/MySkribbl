@@ -143,7 +143,8 @@ class GameSocket
                 });
             });
             this.interval = setInterval(() => {
-                if (this.instructionArray.array.length > 2) {
+                if (this.instructionArray.array.length > 2 || this.instructionArray.goFlag === true) {
+                    this.instructionArray.goFlag = false;
                     console.log("J'envoie ", this.instructionArray.array.length);
                     this.socket.emit("gameData", this.instructionArray.array);
                     this.instructionArray.array = [];
