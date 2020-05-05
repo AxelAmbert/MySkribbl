@@ -23,6 +23,10 @@ class  ServerMainSocket {
     }
 
 
+    newPlayer() {
+        
+    }
+
     initSocket() {
         this.io.on('connection', async (socket) => {
             console.log("middleware:", socket.request._query['roomName']);
@@ -55,6 +59,7 @@ class  ServerMainSocket {
                 playerSecret: secretPlayerID
             });
 
+            this.newPlayer();
         });
     }
 }

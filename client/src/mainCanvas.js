@@ -1,13 +1,20 @@
 import React from "react";
-
 import pixel from "./pixel";
 import {PAINT, BUCKET, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
 import "./index.css";
 import Bucket from "./bucket";
+import {hexToRgba, rgbaToHex} from 'hex-and-rgba';
 
 const clamp = (min, max, val) => Math.min(Math.max(min, val), max);
 
 class MainCanvas extends React.Component {
+
+    customHexToRGBA(hex) {
+        let arr = hexToRgba(hex);
+
+        arr[3] = Math.floor(arr[3] * 255);
+        return (arr);
+    }
 
     constructor(props) {
         console.log("construct maincavas ");
@@ -16,7 +23,8 @@ class MainCanvas extends React.Component {
         this.once = true;
         this.previousState = !this.props.blocked;
         this.bucketDoing = false;
-        this.choosenColor = [0, 0, 0];
+        this.choosenColor = this.customHexToRGBA("#000000");
+        this.oldColor = this.choosenColor;
         this.t0 = performance.now();
         this.t1 = 0;
         this.stack = 0;
@@ -34,8 +42,6 @@ class MainCanvas extends React.Component {
         }
 
         this.timeoutInterval = setInterval(() => {
-
-
             // Reset the timer if the user don't draw for a long time
             const tX = performance.now();
 
@@ -60,19 +66,7 @@ class MainCanvas extends React.Component {
         return (arr[(y * this.width + x) * 4 + 3] !== 0);
     }
 
-    isWhiteColor(arr, x, y) {
-        if (!(arr[(y * this.width + x) * 4] === 255 &&
-            arr[(y * this.width + x) * 4 + 1] === 255 &&
-            arr[(y * this.width + x) * 4 + 2] === 255 &&
-            arr[(y * this.width + x) * 4 + 3] === 255)) {
-            //console.log("NOT WHITE -> ", arr[(y * this.width + x) * 4], arr[(y * this.width + x) * 4 + 1], arr[(y * this.width + x) * 4 + 2], arr[(y * this.width + x) * 4 + 3])
-        }
 
-        return (arr[(y * this.width + x) * 4] === 255 &&
-            arr[(y * this.width + x) * 4 + 1] === 255 &&
-            arr[(y * this.width + x) * 4 + 2] === 255 &&
-            arr[(y * this.width + x) * 4 + 3] === 255);
-    }
 
 
     bucketWrapper() {
@@ -82,11 +76,26 @@ class MainCanvas extends React.Component {
     }
 
     changeColor(newColor) {
+        this.oldColor = this.choosenColor;
         this.ctx.strokeStyle = newColor;
+        this.choosenColor = this.customHexToRGBA(newColor);
     }
 
     changeColorWrapper() {
         this.changeColor(this.props.instructionArray.array[this.props.instructionArray.index].c);
+    }
+
+    diffTolerance(valueOne, valueTwo, tolerance) {
+        // If true, tolerance is respected
+        return (Math.abs(valueOne - valueTwo) <= tolerance);
+    }
+
+    isBaseColor(arr, x, y, baseColor) {
+
+        return (this.diffTolerance(arr[(y * this.width + x) * 4], baseColor[0], 10) &&
+            this.diffTolerance(arr[(y * this.width + x) * 4 + 1], baseColor[1], 10) &&
+            this.diffTolerance(arr[(y * this.width + x) * 4 + 2], baseColor[2], 10) &&
+            this.diffTolerance(arr[(y * this.width + x) * 4 + 3], baseColor[3], 10));
     }
 
     bucket(x, y) {
@@ -96,25 +105,30 @@ class MainCanvas extends React.Component {
         this.bucketDoing = true;
         let imgData = this.ctx.getImageData(0, 0, 800, 600);
         let pixels = imgData.data;
-
+        const baseColor = [pixels[((y * this.width + x) * 4)], pixels[((y * this.width + x) * 4 + 1)], pixels[((y * this.width + x) * 4 + 2)], pixels[((y * this.width + x) * 4 + 3)]];
 
         nodeList.push({x: x, y: y});
         const tmpT0 = performance.now();
+        const maxOperations = 800 * 600 * 4; // width * height * (r/g/b/a) (4)
         let actions = 0;
 
         while (nodeList.length) {
             const posToTest = nodeList.pop();
 
             actions++;
+            if (actions > maxOperations) {
+                console.log(`More than ${maxOperations} operations, something went wrong`);
+                break;
+            }
             const xToTest = posToTest.x;
             const yToTest = posToTest.y;
 
-            if (this.isWhiteColor(pixels, xToTest, yToTest) === false)
+            if (this.isBaseColor(pixels, xToTest, yToTest, baseColor) === false)
                 continue;
-            pixels[((yToTest * this.width + xToTest) * 4)] = 0;
-            pixels[((yToTest * this.width + xToTest) * 4 + 1)] = 0;
-            pixels[((yToTest * this.width + xToTest) * 4 + 2)] = 0;
-            pixels[((yToTest * this.width + xToTest) * 4 + 3)] = 255;
+            pixels[((yToTest * this.width + xToTest) * 4)] = this.choosenColor[0];
+            pixels[((yToTest * this.width + xToTest) * 4 + 1)] = this.choosenColor[1];
+            pixels[((yToTest * this.width + xToTest) * 4 + 2)] = this.choosenColor[2];
+            pixels[((yToTest * this.width + xToTest) * 4 + 3)] = this.choosenColor[3];
             if (xToTest + 1 < 800)
                 nodeList.push({x: xToTest + 1, y: yToTest});
             if (xToTest - 1 >= 0)
@@ -165,6 +179,11 @@ class MainCanvas extends React.Component {
         this.t0 = this.t1;
     }
 
+    clear() {
+        this.ctx.fillStyle = "white";
+        this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
+    }
+
     componentDidUpdate(prevProps, prevState, snapshot) {
 
 
@@ -173,24 +192,12 @@ class MainCanvas extends React.Component {
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
         }
-        if (this.props.blocked !== this.previousState) {
-            console.log("FILLED");
-            this.previousState = this.props.blocked;
-            this.ctx.fillStyle = "white";
-            this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
-        }
     }
 
     componentDidMount() {
         this.offset = {x: this.canvasRef.offsetLeft, y: this.canvasRef.offsetTop};
         this.ctx = this.canvasRef.getContext("2d");
         this.ctx.lineWidth = 3;
-        if (this.once) {
-            console.log("NEW FILLEDF");
-            this.ctx.fillStyle = "white";
-            this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
-            this.once = false;
-        }
     }
 
     componentWillUnmount() {
@@ -222,6 +229,10 @@ class MainCanvas extends React.Component {
     }
 
     changeSelectedAction(selectedAction) {
+        if (selectedAction === PAINT && rgbaToHex(...this.choosenColor).startsWith("#FFFFFF"))
+            this.choosenColor = this.oldColor;
+        else
+            console.log("what ", rgbaToHex(...this.choosenColor));
         this.selectedAction = selectedAction;
     }
 

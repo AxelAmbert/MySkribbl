@@ -27,6 +27,7 @@ import Grid from "@material-ui/core/Grid";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
+import { useLocation } from "react-router-dom";
 
 
 const {useEffect} = require("react");
@@ -76,10 +77,8 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 const Game = () => {
-    console.log("LOL");
+    const location = useLocation();
     const classes = useStyles();
-    const urlParams = new URLSearchParams(window.location.search);
-    const roomName = urlParams.get("roomName");
     let changeSelectedActionCanvasWrapper = _ => {
     };
     let gameServerInstruction = null;
@@ -99,6 +98,8 @@ const Game = () => {
         socket: null,
         instructionArray: new InstructionArray(),
         wordToGuess: "",
+        roomName: location.state.roomName,
+        playerName: location.state.playerName
     });
 
 
@@ -135,13 +136,14 @@ const Game = () => {
         messageServerInstruction = {
             "newPlayerTurn": () => {
                 handleNewPlayerTurn();
-            }
+            },
+            "chooseAWord": canvasRef.clear.bind(canvasRef),
+            "waitBeforeDraw": canvasRef.clear.bind(canvasRef),
         };
         if (!state.socket) {
             customSetState({socket: new GameSocket(callbackCaller, AWS_URL, state.instructionArray, gameServerInstruction, messageServerInstruction)});
         } else if (!state.socket.isSetup) {
-            state.socket.setupSocket();
-
+            state.socket.setupSocket(`roomName=${state.roomName}&playerName=${state.playerName}`);
         }
         console.log("new state ? ", state);
         if (state.gameNotStartedYet && state.leader) {

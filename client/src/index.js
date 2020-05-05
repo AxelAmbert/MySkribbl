@@ -11,7 +11,7 @@ const App = () => {
         <Router>
             <Switch>
                 <Route exact path={"/"} component={Menu}/>
-                <Route path={"/game"}><Game /></Route>
+                <Route path={"/game"} component={Game} />
              </Switch>
         </Router>
     );

@@ -15,7 +15,6 @@ import shinypink from "./photorealistic-icons/FF00FF.png";
 import orange from "./photorealistic-icons/FF9900.png";
 
 
-
 import Grid from '@material-ui/core/Grid';
 import Container from "@material-ui/core/Container";
 import PlayerCard from "./playerCard";
@@ -32,6 +31,7 @@ import Button from "@material-ui/core/Button";
 import Box from "@material-ui/core/Box";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
+import { useHistory } from "react-router-dom";
 
 
 const useStyles = makeStyles((theme) => ({
@@ -73,7 +73,19 @@ const useStyles = makeStyles((theme) => ({
         "margin": "0px",
         "padding": "0px",
     },
-
+    mainMenu: {
+        display: "flex",
+        width: "100%",
+        height: "100%",
+        margin: "0 auto",
+        "flex-direction": "column",
+    },
+    subGrid: {
+        display: "flex",
+        "flex-direction": "row dense",
+        "margin-top" : "10px",
+        "margin-bottom": "25px",
+    },
 
 }));
 
@@ -81,14 +93,15 @@ const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
 
 const Menu = (props) => {
 
+    const history = useHistory();
     const classes = useStyles();
     const theme = useTheme();
     let canvasRef = null;
     const [state, setState] = useState({
+        playerName: "",
         joinRoomText: "",
         newRoomText: "",
         playersList: [{name: "ok", score: 1003}],
-        instructionArray: new InstructionArray(),
     });
 
     useEffect(() => {
@@ -102,39 +115,44 @@ const Menu = (props) => {
          }*/
     });
 
-    const newRoomCallback = (result) => {
+    const roomCallback = (result) => {
         if (result.success === true) {
-            props.history.push(`/game?roomName=${result.roomName}`);
+            history.push( {
+                pathname: '/game',
+                //search: `?roomName=${result.roomName}`,
+                state: { roomName: result.roomName,
+                         playerName: state.playerName
+                }
+            });
         } else {
             alert(`Something went wrong : ${result.error}`)
         }
     };
 
-    const joinRoomCallback = (result) => {
-        console.log("res ", result);
-        if (result.success === true) {
-            props.history.push(`/game?roomName=${result.roomName}`);
-        } else {
-            alert(`Something went wrong : ${result.error}`)
-        }
-    };
 
     const newRoom = () => {
+        console.log("jpp ", state);
 
-        if (state.newRoomText.length === 0) {
-            alert("Please enter a roomName");
+        if (state.newRoomText.length === 0 || state.playerName.length < 6) {
+            alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
-
+       console.log("aft");
         fetch(`${AWS_URL}/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
-            .then(res => res.json())
-            .then(res => newRoomCallback(res));
+            .then(res => {
+                console.log("res");
+                console.log(res);
+                return (res.json())})
+            .then(res => roomCallback(res));
     };
 
     const joinRoom = () => {
-        console.log("lol");
-        if (state.joinRoomText.length === 0) {
-            alert("Please enter a roomName");
+        console.log("jpp ", state);
+
+
+        console.log("lol ", state.playerName);
+        if (state.joinRoomText.length === 0 || state.playerName.length < 6) {
+            alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
 
@@ -143,21 +161,47 @@ const Menu = (props) => {
                 console.log(res);
                 return (res.json())
             })
-            .then(res => joinRoomCallback(res));
+            .then(res => roomCallback(res));
     };
 
 
     const elements = (
-        <div>
+        <div className={classes.mainMenu}>
 
-            <input class="myButton" placeholder="Enter new room name name"
-                   onChange={(value) => setState({newRoomText: value.target.value})}/>
-            <input name="Submit" type="submit" onClick={() => newRoom()}/>
+            <div className={classes.subGrid}>
+                <input className="myButton" id="joinRoomaName" placeholder="Enter Player Name"
+                       onChange={(value) => {
+                           const playerName =  value.target.value;
+                           setState(
+                               (prev) => {
+                                   return {...prev, playerName};
+                               })
+                       }}/>
+            </div>
 
+            <div className={classes.subGrid}>
+                <input placeholder="Enter new room name name"
+                       onChange={(value) => {
+                           const newRoomText =  value.target.value;
+                           setState(
+                               (prev) => {
+                                   return {...prev, newRoomText};
+                               })
+                       }}/>
+                <input name="Submit" type="submit" onClick={() => newRoom()}/>
+            </div>
 
-            <input class="myButton" id="joinRoomName" placeholder="Enter existing room name"
-                   onChange={(value) => setState({joinRoomText: value.target.value})}/>
-            <input name="Submit" type="submit" onClick={() => joinRoom()}/>
+            <div className={classes.subGrid}>
+                <input id="joinRoomName" placeholder="Enter existing room name"
+                       onChange={(value) => {
+                           const joinRoomText =  value.target.value;
+                           setState(
+                               (prev) => {
+                                   return {...prev, joinRoomText};
+                               })
+                       }}/>
+                <input name="Submit" type="submit" onClick={() => joinRoom()}/>
+            </div>
         </div>
 
     );

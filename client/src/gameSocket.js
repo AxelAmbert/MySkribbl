@@ -67,13 +67,16 @@ class GameSocket
         this.socket.emit("chooseWord", word);
     }
 
-    setupSocket()
+    setupSocket(query)
     {
         const urlParams = new URLSearchParams(window.location.search);
 
-        this.socket = socketIOClient(this.URL, {reconnect: true, query: `roomName=${urlParams.get("roomName")}`});
+        this.socket = socketIOClient(this.URL, {reconnect: true, query /* `roomName=${urlParams.get("roomName")}`*/});
 
         this.socket.on("waitBeforeDraw", () => {
+            if (this.gameMessageInstructions["waitBeforeDraw"]) {
+                this.gameMessageInstructions["waitBeforeDraw"]();
+            }
             if (this.interval) {
                 clearInterval(this.interval);
                 this.interval = null;
@@ -118,6 +121,9 @@ class GameSocket
         });
 
         this.socket.on("chooseAWord", (data) => {
+            if (this.gameMessageInstructions["chooseAWord"]) {
+                this.gameMessageInstructions["chooseAWord"]();
+            }
             console.log("Je dois choisir un mot zeubi !", data);
            this.parentSetState(
                (_) => {
@@ -130,6 +136,7 @@ class GameSocket
         });
 
         this.socket.on("startDrawing", (data) => {
+
             console.log("draw looser");
             //data.wordToDraw;
             this.parentSetState((_) => {
