@@ -1,3 +1,5 @@
+const {performance} = require('perf_hooks');
+
 class Round {
 
     constructor(/*Room*/Room) {
@@ -8,6 +10,7 @@ class Round {
         this.drawingPlayer = null;
         this.chooseWordTimeout = null;
         this.hintInterval = null;
+        this.startDrawTimer = 0;
     }
 
     reset() {
@@ -68,8 +71,9 @@ class Round {
         this.pendingWords = [];
         this.hintInterval = setInterval(() => {
             this.getAnHint();
-        }, 10000);
+        }, Math.floor(80000 / (word.length / 3)));
         this.chooseWordTimeout = null;
+        this.startDrawTimer = performance.now();
     }
 
     startARound() {

@@ -7,6 +7,6 @@ export const DRAW_PIXEL = 0;
 
 export const PAINT = 0;
 export const BUCKET = 1;
-export const ERASER = 2;
-export const CHANGE_COLOR = 3;
+export const CHANGE_COLOR = 2;
+export const CLEAR = 3;
 export const CHANGE_STROKE_SIZE = 4;

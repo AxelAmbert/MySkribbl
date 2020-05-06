@@ -102,6 +102,7 @@ const Menu = (props) => {
         joinRoomText: "",
         newRoomText: "",
         playersList: [{name: "ok", score: 1003}],
+        instructionArray: new InstructionArray(),
     });
 
     useEffect(() => {
@@ -147,16 +148,12 @@ const Menu = (props) => {
     };
 
     const joinRoom = () => {
-        console.log("jpp ", state);
-
-
-        console.log("lol ", state.playerName);
         if (state.joinRoomText.length === 0 || state.playerName.length < 6) {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
 
-        fetch(`${AWS_URL}/joinroom/${state.joinRoomText}/`, {mode: 'no-cors'})
+        fetch(`${AWS_URL}/joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors'})
             .then((res) => {
                 console.log(res);
                 return (res.json())
@@ -207,7 +204,7 @@ const Menu = (props) => {
     );
 
     return (
-        [elements,/*
+        [elements, /*
             <div className={classes.mainGrid}>
                 <ListOfPlayers playersInfos={state.playersList}/>
                 <div className={classes.canvasGrid}>

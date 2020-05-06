@@ -29,12 +29,21 @@ const useStyles = makeStyles((theme) => ({
         "border-style": "solid",
         "border-width": "3px",
         maxWidth: 100,
-        maxHeight: 100
+        maxHeight: 100,
+        margin: "0",
     },
     media: {
-
         height: 0,
         paddingTop: '56.25%', // 16:9
+    },
+    hasFoundWord: {
+      background: "green",
+    },
+    textGrid: {
+      display: "flex",
+      "flex-direction": "column",
+        margin: "0 auto",
+        "overflow-wrap" : "break-word",
     },
 }));
 
@@ -43,27 +52,32 @@ const PlayerCard = (props) => {
 
     const classes = useStyles();
     const theme = useTheme();
+    const color = props.hasFoundWord ? ` ${classes.hasFoundWord}` : "";
+    let playerName = props.playerName;
 
     const [state, setState] = useState({
         numberOfPoint: 0
     });
 
+    if (props.playerName.length > 20) {
+      playerName = props.playerName.substring(0, 20);
+    }
     return (
         <Card className={classes.mainCard}>
-            <div className={classes.container}>
+            <div className={`${classes.container}${color}`}>
                 <CardMedia
                     className={classes.image}
                     src={orange} component="img"
                     title="Live from space album cover">
                 </CardMedia>
-                <Grid container direction={"column"}>
+                <div className={classes.textGrid}>
                     <CardContent className={classes.testC}>
-                        {props.playerName}
+                        {playerName}
                     </CardContent>
                     <CardContent className={classes.testC}>
                         {props.playerScore} points
                     </CardContent>
-                </Grid>
+                </div>
             </div>
         </Card>
     );

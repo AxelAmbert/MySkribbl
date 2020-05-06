@@ -43,7 +43,7 @@ const ListOfPlayers = (props) => {
     });
 
     props.playersInfos.forEach((player) => {
-        players.push(<PlayerCard playerName={player.name} playerScore={player.score}/>);
+        players.push(<PlayerCard playerName={player.name} playerScore={player.score} hasFoundWord={player.hasFoundWord}/>);
     });
 
 
@@ -52,7 +52,7 @@ const ListOfPlayers = (props) => {
         <div >
             <img src={looserTop} alt="Logo" className={classes.nospace}/>
             <div className={classes.image}>
-                <img src={greatBackground} alt="Logo"/>
+                <img src={greatBackground} alt="Logo" />
                 <Grid container direction={"column"} className={`${classes.gridContainer} ${classes.child}`}>
                     {players}
                 </Grid>

@@ -1,4 +1,5 @@
 const Round = require("./round");
+const {performance} = require('perf_hooks');
 
 class Room {
     constructor(roomName, roomSecret) {
@@ -12,6 +13,32 @@ class Room {
         console.log("before round");
         this.currentRound = new Round(this);
         console.log("Round is called ", this.currentRound);
+    }
+
+    playerExist(playerName) {
+        let exist = false;
+
+        this.players.forEach((player) => {
+            if (player.name === playerName)
+                exist = true;
+        });
+        return (exist);
+    }
+
+    onNewPlayer() {
+        this.updatePlayersInfos();
+    }
+
+    updatePlayersInfos() {
+        let playersInfos = [];
+
+        this.players.forEach((player) => {
+           playersInfos.push({name: player.name, score: player.score, hasFoundWord: player.hasFoundWord});
+        });
+        this.players.forEach((roomPlayer) => {
+            roomPlayer.socket.emit("playersInfos", playersInfos);
+        })
+
     }
 
     chooseWord(word) {
@@ -40,6 +67,12 @@ class Room {
         return (leader);
     }
 
+    playerIsDrawing(player) {
+        if (!this.playerDrawing)
+            return (null);
+        return (this.playerDrawing.secretID === player.secretID);
+    }
+
     checkWinSituation() {
         let everyoneFound = true;
 
@@ -48,9 +81,11 @@ class Room {
                 everyoneFound = false;
         });
         if (everyoneFound === false)
-            return;
+            return (false);
         this.currentRound.reset();
         this.timeouts["waitForPlayerToPickAWord"] = this.currentRound.startARound();
+        this.updatePlayersInfos();
+        return (everyoneFound);
     }
 
     playerChatMessage(/*Player*/Player, message) {
@@ -58,21 +93,32 @@ class Room {
             text: message
         };
 
-        if (Player.hasFoundWord === false) {
+        if (Player.hasFoundWord === false && this.playerIsDrawing(Player) === false) {
             //message === this.currentRound.choosenWord
             if (message.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase() ===
             this.currentRound.choosenWord.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()) {
+                const secsSinceStart = Math.min(80, Math.max(0, Math.floor((performance.now() - this.currentRound.startDrawTimer) / 1000)));
+
+
+                Player.score += (this.currentRound.choosenWord.length * (80 - secsSinceStart));
+                console.log("check win");
+
                 Player.socket.emit("foundWord", this.currentRound.choosenWord);
                 Player.hasFoundWord = true;
+                if (this.checkWinSituation() === false) {
+                    this.updatePlayersInfos();
+                }
+
             }
         }
-        if (Player.hasFoundWord || Player.secretID === this.currentRound.drawingPlayer.secretID) {
+        if (Player.hasFoundWord ||
+        (this.currentRound.drawingPlayer &&
+        Player.secretID === this.currentRound.drawingPlayer.secretID)) {
             messageObject.color = "green";
             this.players.forEach((roomPlayer) => {
                 if (roomPlayer.hasFoundWord)
                     roomPlayer.socket.emit("chatMessage", messageObject);
             });
-            this.checkWinSituation();
         } else {
             messageObject.color = "black";
             this.players.forEach((roomPlayer) => {

@@ -67,21 +67,32 @@ class MainCanvas extends React.Component {
     }
 
 
-
-
     bucketWrapper() {
         const pixel = this.props.instructionArray.array[this.props.instructionArray.index];
 
         this.bucket(pixel.x, pixel.y);
     }
 
+    changeStrokeSize(size) {
+        this.ctx.lineWidth = size;
+
+    }
+
+    changeStrokeSizeWrapper() {
+        this.changeStrokeSize(this.props.instructionArray.array[this.props.instructionArray.index].s);
+    }
+
     changeColor(newColor) {
+        const rgba = this.customHexToRGBA(newColor);
+
         this.oldColor = this.choosenColor;
         this.ctx.strokeStyle = newColor;
-        this.choosenColor = this.customHexToRGBA(newColor);
+        this.choosenColor = rgba;
+        this.ctx.fillStyle = `rgba(${rgba[0]}, ${rgba[1]}, ${rgba[2]}, ${rgba[3]})`;
     }
 
     changeColorWrapper() {
+
         this.changeColor(this.props.instructionArray.array[this.props.instructionArray.index].c);
     }
 
@@ -149,29 +160,36 @@ class MainCanvas extends React.Component {
 
     drawPixel() {
         const pixel = this.props.instructionArray.array[this.props.instructionArray.index];
+        const directionVectorX = pixel.x - pixel.ox,
+            directionVectorY =  pixel.y - pixel.oy;
+        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI/2;
+        const path = new Path2D();
 
-        this.ctx.beginPath(); // begin
-        this.ctx.lineWidth = 4;
-        this.ctx.lineCap = 'round';
-        //this.ctx.strokeStyle = '#c0392b';
-        this.ctx.moveTo(pixel.ox, pixel.oy); // from
-        this.ctx.lineTo(pixel.x, pixel.y); // to
-        this.ctx.stroke(); // draw it!
+        path.arc(pixel.ox, pixel.oy, this.ctx.lineWidth, perpendicularVectorAngle, perpendicularVectorAngle + Math.PI);
+        path.arc(pixel.x, pixel.y, this.ctx.lineWidth, perpendicularVectorAngle + Math.PI, perpendicularVectorAngle);
+        path.closePath();
+        this.ctx.fill(path);
     }
+
+
+
 
     handlePlayerDrawing(mouse) {
         let calculateTimeout = 0;
 
         if (mouse.buttons !== 1 || this.selectedAction !== PAINT || this.props.blocked)
             return;
-        this.ctx.beginPath(); // begin
-        const oldpos = {x: this.pos.x, y: this.pos.y};
-        this.ctx.moveTo(this.pos.x, this.pos.y); // from
+        //this.ctx.beginPath(); // begin
+        let oldpos = {x: this.pos.x, y: this.pos.y};
         this.setPosition(mouse);
-        this.ctx.lineTo(this.pos.x, this.pos.y); // to
-
-
-        this.ctx.stroke(); // draw it!
+        const directionVectorX = this.pos.x - oldpos.x,
+            directionVectorY =  this.pos.y - oldpos.y;
+        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI/2;
+        const path = new Path2D();
+        path.arc(oldpos.x, oldpos.y, this.ctx.lineWidth, perpendicularVectorAngle, perpendicularVectorAngle + Math.PI);
+        path.arc(this.pos.x, this.pos.y, this.ctx.lineWidth, perpendicularVectorAngle + Math.PI, perpendicularVectorAngle);
+        path.closePath();
+        this.ctx.fill(path);
         this.t1 = performance.now();
 
         calculateTimeout = clamp(0, SEND_DATA_EVERY_X_MILISECONDS, Math.floor(this.t1 - this.t0)); // Get the difference between previous click time and actual click time, floor it and then clamp it between 0 and SEND_DATA_EVERY_X_MILISECONDS
@@ -180,8 +198,11 @@ class MainCanvas extends React.Component {
     }
 
     clear() {
+        const oldFIllStyle = this.ctx.fillStyle;
+
         this.ctx.fillStyle = "white";
         this.ctx.fillRect(0, 0, this.canvasRef.width, this.canvasRef.height);
+        this.ctx.fillStyle = oldFIllStyle;
     }
 
     componentDidUpdate(prevProps, prevState, snapshot) {
@@ -243,11 +264,11 @@ class MainCanvas extends React.Component {
     render() {
         return (
 
-                <canvas className={"mainCanvas"} width="800" height="600" ref={ref => {
-                    this.canvasRef = ref;
-                }} onClick={this.handleClickOnCanvas.bind(this)}>
-                    Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
-                </canvas>
+            <canvas className={"mainCanvas"} width="800" height="600" ref={ref => {
+                this.canvasRef = ref;
+            }} onClick={this.handleClickOnCanvas.bind(this)}>
+                Désolé, votre navigateur ne prend pas en charge &lt;canvas&gt;.
+            </canvas>
 
         );
     }

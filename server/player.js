@@ -5,6 +5,7 @@ class Player {
         this.isLeader = false;
         this.secretID = secretID;
         this.hasFoundWord = false;
+        this.score = 0;
     }
 }
 

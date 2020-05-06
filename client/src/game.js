@@ -6,7 +6,7 @@ import ActionButton from "./actionButton";
 import paintBrush from "./photorealistic-icons/paint-brush.png";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
 import eraser from "./photorealistic-icons/eraser.png";
-
+import trash from "./photorealistic-icons/trash.png";
 /* COLORS */
 
 import black from "./photorealistic-icons/000000.png";
@@ -15,6 +15,14 @@ import purple from "./photorealistic-icons/5500FF.png";
 import softpink from "./photorealistic-icons/CC99FF.png";
 import shinypink from "./photorealistic-icons/FF00FF.png";
 import orange from "./photorealistic-icons/FF9900.png";
+
+/* STROKES */
+import stroke1 from "./photorealistic-icons/stroke1.png";
+import stroke2 from "./photorealistic-icons/stroke2.png";
+import stroke3 from "./photorealistic-icons/stroke3.png";
+import stroke4 from "./photorealistic-icons/stroke4.png";
+
+
 
 import './index.css';
 import {AWS_URL, BUCKET, PAINT} from "./constants";
@@ -28,6 +36,8 @@ import makeStyles from "@material-ui/core/styles/makeStyles";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
 import { useLocation } from "react-router-dom";
+import clearCanvas from "./clearCanvas";
+import ChangeStrokeSize from "./changeStroke";
 
 
 const {useEffect} = require("react");
@@ -94,7 +104,7 @@ const Game = () => {
         playerSecret: "not-logged",
         wordsToChoose: [],
         chatMessages: [],
-        playersList: [{name: "ok", score: 1003}],
+        playersInfos: [],
         socket: null,
         instructionArray: new InstructionArray(),
         wordToGuess: "",
@@ -132,7 +142,7 @@ const Game = () => {
 
     useEffect(() => {
         changeSelectedActionCanvasWrapper = canvasRef.changeSelectedAction.bind(canvasRef);
-        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef), canvasRef.bucketWrapper.bind(canvasRef), canvasRef.changeColorWrapper.bind(canvasRef)];
+        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef), canvasRef.bucketWrapper.bind(canvasRef), canvasRef.changeColorWrapper.bind(canvasRef), canvasRef.clear.bind(canvasRef), canvasRef.changeStrokeSizeWrapper.bind(canvasRef)];
         messageServerInstruction = {
             "newPlayerTurn": () => {
                 handleNewPlayerTurn();
@@ -164,7 +174,7 @@ const Game = () => {
 
     return (
         <div className={classes.mainGrid}>
-            <ListOfPlayers playersInfos={state.playersList}/>,
+            <ListOfPlayers playersInfos={state.playersInfos}/>,
             <div className={classes.canvasGrid}>
                 <p className={classes.wordToGuess}> {state.wordToGuess} </p>
                 <div className={"canvasGuessWordContainer"}>
@@ -183,6 +193,13 @@ const Game = () => {
                     <ActionButton img={<img src={eraser} alt="Logo" width={75} height={75}/>} trigger={() => {
                         canvasRef.changeColor("#FFFFFF");
                         state.instructionArray.array.push(new ChangeColor("#FFFFFF"));
+                    }}/>
+                    <ActionButton img={<img src={trash} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        if (state.playerTurn === true) {
+                            canvasRef.clear();
+                            state.instructionArray.array.push(new clearCanvas());
+                            state.instructionArray.goFlag = true;
+                        }
                     }}/>
                     {startGameButton}
                 </div>
@@ -213,7 +230,26 @@ const Game = () => {
                     }}/>
 
                 </div>
-            </div>
+                <div className={classes.actionButtonsGrid}>
+                    <ActionButton img={<img src={stroke1} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeStrokeSize(1);
+                        state.instructionArray.array.push(new ChangeStrokeSize(1));
+                    }}/>
+                    <ActionButton img={<img src={stroke2} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeStrokeSize(5);
+                        state.instructionArray.array.push(new ChangeStrokeSize(5));
+                    }}/>
+                    <ActionButton img={<img src={stroke3} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeStrokeSize(10);
+                        state.instructionArray.array.push(new ChangeStrokeSize(10));
+                    }}/>
+                    <ActionButton img={<img src={stroke4} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.changeStrokeSize(15);
+                        state.instructionArray.array.push(new ChangeStrokeSize(15));
+                    }}/>
+                </div>
+
+                </div>
             <div className={classes.chatGrid}>
                 <Chat chatMessages={state.chatMessages} sendMessageTrigger={(message) => {
                     state.socket.sendChatMessage(message);

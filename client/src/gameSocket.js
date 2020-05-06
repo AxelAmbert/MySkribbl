@@ -177,6 +177,14 @@ class GameSocket
                });
            });
         });
+
+        this.socket.on("playersInfos", (playersInfos) => {
+            this.parentSetState((prevState) => {
+               return ({
+                   playersInfos: playersInfos
+               })
+            });
+        });
         this.isSetup = true;
     }
     sendChatMessage(message) {

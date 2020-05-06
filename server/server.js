@@ -77,8 +77,8 @@ app.post("/photo/", async (req, res) => {
 
 app.get('/newroom/:roomName', (req, res) => {
     const roomName = req.params.roomName || null;
-
-    if (RoomList[req.params.roomName]) {
+    const TheRoom = RoomList[req.params.roomName];
+    if (TheRoom) {
         res.json({success: false, error: "Room already exist"});
         return;
     } else if (!roomName) {
@@ -109,13 +109,17 @@ app.post("/user/", async (req, res) => {
     res.status(200).json(user);
 });*/
 
-app.get('/joinroom/:roomName',
+app.get('/joinroom/:roomName/:playerName',
     (req, res) => {
+
     const Room = RoomList[req.params.roomName];
 
 
     if (!Room) {
         res.status(404).json({success: false, error: `Room ${req.params.roomName} don't exist`});
+        return;
+    } else if (Room.playerExist(req.params.playerName)) {
+        res.status(500).json({success: false, error: `player ${req.params.playerName} already in the room`});
         return;
     }
     res.status(200).json({success: true, roomName: req.params.roomName});

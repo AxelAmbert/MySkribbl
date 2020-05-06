@@ -22,11 +22,6 @@ class  ServerMainSocket {
         Room.playerChatMessage(Player, message);
     }
 
-
-    newPlayer() {
-        
-    }
-
     initSocket() {
         this.io.on('connection', async (socket) => {
             console.log("middleware:", socket.request._query['roomName']);
@@ -42,7 +37,8 @@ class  ServerMainSocket {
                 return;
             }
             const newPlayer = new Player(socket, playerName, secretPlayerID);
-            PlayerRoom.wordBank = this.wordBank;
+            if (!PlayerRoom.wordBank)
+                PlayerRoom.wordBank = this.wordBank;
             await socket.join(roomName);
             PlayerRoom.players.push(newPlayer);
 
@@ -59,7 +55,7 @@ class  ServerMainSocket {
                 playerSecret: secretPlayerID
             });
 
-            this.newPlayer();
+            PlayerRoom.onNewPlayer();
         });
     }
 }
