@@ -132,30 +132,25 @@ const Menu = (props) => {
 
 
     const newRoom = () => {
-        console.log("jpp ", state);
 
-        if (state.newRoomText.length === 0 || state.playerName.length < 6) {
+        if (state.newRoomText.length === 0 || state.playerName.length < 3) {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
-       console.log("aft");
         fetch(`${AWS_URL}/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
             .then(res => {
-                console.log("res");
-                console.log(res);
                 return (res.json())})
             .then(res => roomCallback(res));
     };
 
     const joinRoom = () => {
-        if (state.joinRoomText.length === 0 || state.playerName.length < 6) {
+        if (state.joinRoomText.length === 0 || state.playerName.length < 3) {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
 
         fetch(`${AWS_URL}/joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors'})
             .then((res) => {
-                console.log(res);
                 return (res.json())
             })
             .then(res => roomCallback(res));
@@ -204,9 +199,9 @@ const Menu = (props) => {
     );
 
     return (
-        [elements, /*
+        [elements,/*
             <div className={classes.mainGrid}>
-                <ListOfPlayers playersInfos={state.playersList}/>
+                <ListOfPlayers playersInfos={state.playersList} me={"dd"}/>
                 <div className={classes.canvasGrid}>
                     <div className={"canvasGuessWordContainer"}>
                         <WordsToChoose words={["mdr", "lol", "hihi"]} display={false} />
@@ -230,7 +225,10 @@ const Menu = (props) => {
                             console.log("go for bucket");
 
                         }}/>
+                        <ActionButton img={<img src={eraser} alt="Logo" width={75} height={75}/>} trigger={() => {
+                            canvasRef.goBack();
 
+                        }}/>
                     </div>
                     <div className={classes.actionButtonsGrid}>
                         <ActionButton img={<img src={black} alt="Logo" width={75} height={75}/>} trigger={() => {

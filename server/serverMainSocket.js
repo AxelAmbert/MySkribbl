@@ -17,6 +17,23 @@ class  ServerMainSocket {
         socket.to(roomName).emit("gameData", data);
     }
 
+    handleDisconnection(roomName, Player) {
+        console.log("DISCO !");
+        const Room = this.RoomList[roomName];
+
+        if (!roomName)
+            return;
+        Room.players.forEach((player, index) => {
+            if (player.secretID === Player.secretID) {
+                Room.onPlayerQuit(player);
+            }
+        });
+        if (Room.players.length === 0) {
+            Room.end();
+            delete this.RoomList[roomName];
+        }
+    }
+
     onChatMessage(/*Player*/Player, /*Room*/Room, message) {
         console.log("JE RECOIS UN CHAT MESSAGE ", message);
         Room.playerChatMessage(Player, message);
@@ -50,6 +67,7 @@ class  ServerMainSocket {
 
             socket.on("chooseWord", PlayerRoom.chooseWord.bind(PlayerRoom));
 
+            socket.on("disconnect", this.handleDisconnection.bind(this, roomName, newPlayer));
             socket.emit("welcome", {
                 leader: PlayerRoom.players.length === 1,
                 playerSecret: secretPlayerID

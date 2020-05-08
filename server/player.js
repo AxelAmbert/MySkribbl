@@ -6,6 +6,7 @@ class Player {
         this.secretID = secretID;
         this.hasFoundWord = false;
         this.score = 0;
+        this.lastScore = 0;
     }
 }
 

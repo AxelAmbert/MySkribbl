@@ -20,6 +20,7 @@ class Round {
             clearInterval(this.hintInterval);
         this.parentRoom.players.forEach((player) => {
             player.hasFoundWord = false;
+            player.lastScore = 0;
         });
         this.choosenWord = "";
         this.slicedWord = "";

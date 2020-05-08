@@ -3,16 +3,19 @@ const {performance} = require('perf_hooks');
 
 class Room {
     constructor(roomName, roomSecret) {
-        console.log("ROOM CONSTRUCTOR CALLED");
         this.roomName = roomName;
         this.roomSecret = roomSecret;
         this.players = [];
         this.playerDrawing = 0;
         this.timeouts = [];
         this.wordBank = null;
-        console.log("before round");
         this.currentRound = new Round(this);
-        console.log("Round is called ", this.currentRound);
+    }
+
+    end() {
+        this.currentRound.reset();
+        delete this.currentRound;
+        delete this.wordBank;
     }
 
     playerExist(playerName) {
@@ -27,6 +30,29 @@ class Room {
 
     onNewPlayer() {
         this.updatePlayersInfos();
+    }
+
+    removePlayer(id) {
+        this.players.forEach((player, index) => {
+            if (player.secretID === id) {
+                this.players.splice(index, 1);
+            }
+        });
+    }
+
+    onPlayerQuit(leavingPlayer) {
+        if (this.currentRound && this.currentRound.drawingPlayer &&
+        leavingPlayer.secretID === this.currentRound.drawingPlayer.secretID && this.players.length > 1) {
+            this.removePlayer(leavingPlayer.secretID);
+            this.currentRound.reset();
+            this.currentRound.startARound();
+            this.updatePlayersInfos();
+        } else if (this.players.length > 1) {
+            this.removePlayer(leavingPlayer.secretID);
+            this.updatePlayersInfos();
+        } else {
+            this.removePlayer(leavingPlayer.secretID);
+        }
     }
 
     updatePlayersInfos() {
@@ -68,20 +94,24 @@ class Room {
     }
 
     playerIsDrawing(player) {
-        if (!this.playerDrawing)
+        if (!this.currentRound.drawingPlayer)
             return (null);
-        return (this.playerDrawing.secretID === player.secretID);
+        return (this.currentRound.drawingPlayer.secretID === player.secretID);
     }
 
     checkWinSituation() {
         let everyoneFound = true;
+        let sum = 0;
 
         this.players.forEach((roomPlayer) => {
             if (roomPlayer.hasFoundWord === false && this.currentRound.drawingPlayer.secretID !== roomPlayer.secretID)
                 everyoneFound = false;
+            sum += roomPlayer.lastScore;
         });
+
         if (everyoneFound === false)
             return (false);
+        this.currentRound.drawingPlayer.score += Math.floor((sum / this.players.length) + (sum / this.players.length * 0.10));
         this.currentRound.reset();
         this.timeouts["waitForPlayerToPickAWord"] = this.currentRound.startARound();
         this.updatePlayersInfos();
@@ -99,9 +129,8 @@ class Room {
             this.currentRound.choosenWord.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase()) {
                 const secsSinceStart = Math.min(80, Math.max(0, Math.floor((performance.now() - this.currentRound.startDrawTimer) / 1000)));
 
-
-                Player.score += (this.currentRound.choosenWord.length * (80 - secsSinceStart));
-                console.log("check win");
+                Player.lastScore = (this.currentRound.choosenWord.length * (80 - secsSinceStart));
+                Player.score += Player.lastScore;
 
                 Player.socket.emit("foundWord", this.currentRound.choosenWord);
                 Player.hasFoundWord = true;

@@ -7,24 +7,52 @@ class ChatTextField extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            text: ""
+            timeSinceLastMessage: 0,
+            text: "",
         }
     }
 
     render() {
         return ([
-            <TextField  value={this.state.text} ref={ref => this.textFieldRef = ref} id="standard-basic" label="Standard"  onChange={(textEvent) => {
+            <form onSubmit={(e) => {
+                e.preventDefault();
+
+
+                const text = this.state.text.substr(0, 50);
+                if (this.state.text.length === 0)
+                    return;
+                const timeout = performance.now();
+                if (timeout - this.state.timeSinceLastMessage < 1000)
+                    return;
+                this.props.sendMessageTrigger(text);
                 this.setState({
-                    text: textEvent.target.value
+                    text: "",
+                    timeSinceLastMessage: timeout,
                 });
-            }}/>,
+                return (false);
+            }}>
+                <TextField value={this.state.text} ref={ref => this.textFieldRef = ref} id="standard-basic"
+                           label="Write the word" onChange={(textEvent) => {
+                    this.setState({
+                        text: textEvent.target.value
+                    });
+                }}/>
+            </form>,
             <ActionButton img={<img src={paintBucket} alt="Logo" width={30} height={30}/>} trigger={
                 () => {
-                    console.log("envoie de ", this.state.text);
-                    this.props.sendMessageTrigger(this.state.text);
+                    const text = this.state.text.substr(0, 50);
+
+                    if (this.state.text.length === 0)
+                        return (false);
+                    const timeout = performance.now();
+                    if (timeout - this.state.timeSinceLastMessage < 1000)
+                        return;
+                    this.props.sendMessageTrigger(text);
                     this.setState({
-                        text: ""
+                        text: "",
+                        timeSinceLastMessage: timeout,
                     });
+                    return (false);
                 }
             }/>,
         ]);

@@ -10,3 +10,5 @@ export const BUCKET = 1;
 export const CHANGE_COLOR = 2;
 export const CLEAR = 3;
 export const CHANGE_STROKE_SIZE = 4;
+export const END_ACTION = 5;
+export const GO_BACK = 6;

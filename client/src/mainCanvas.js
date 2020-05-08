@@ -4,6 +4,7 @@ import {PAINT, BUCKET, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
 import "./index.css";
 import Bucket from "./bucket";
 import {hexToRgba, rgbaToHex} from 'hex-and-rgba';
+import EndAction from "./endAction";
 
 const clamp = (min, max, val) => Math.min(Math.max(min, val), max);
 
@@ -17,12 +18,10 @@ class MainCanvas extends React.Component {
     }
 
     constructor(props) {
-        console.log("construct maincavas ");
         super(props);
         this.selectedAction = PAINT;
         this.once = true;
         this.previousState = !this.props.blocked;
-        this.bucketDoing = false;
         this.choosenColor = this.customHexToRGBA("#000000");
         this.oldColor = this.choosenColor;
         this.t0 = performance.now();
@@ -34,8 +33,11 @@ class MainCanvas extends React.Component {
         this.setPositionWrapper = this.setPosition.bind(this);
         this.width = 800;
         this.height = 600;
+        this.saves = [];
+        this.enableActionValidity = true;
 
         if (this.props.blocked !== true) {
+            this.mouseUpEvent = document.addEventListener("mouseup", this.endActionWrapper.bind(this));
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
@@ -49,7 +51,9 @@ class MainCanvas extends React.Component {
                 this.t0 = tX;
             }
         }, SEND_DATA_EVERY_X_MILISECONDS / 5);
+
     }
+
 
     setPosition(mouse) {
         const rect = this.canvasRef.getBoundingClientRect();
@@ -61,8 +65,39 @@ class MainCanvas extends React.Component {
 
     }
 
+    goBack() {
+        if (this.saves.length < 2)
+            return;
+        this.saves.pop();
+        const data = this.saves[this.saves.length - 1];
+        this.clear();
+        this.ctx.putImageData(data,0, 0);
+    }
+
+    triggerSave() {
+
+        if (this.enableActionValidity !== true && this.props.blocked === false) {
+            return false;
+        }
+        this.enableActionValidity = false;
+        if (this.saves.length > 1000) {
+            this.saves.shift();
+        }
+
+        this.saves.push(this.ctx.getImageData(0, 0, 800, 600));
+        return (true);
+
+    }
+
+    endActionWrapper(mouse) {
+        this.setPosition(mouse);
+
+        if (this.triggerSave() === true) {
+            this.props.instructionArray.array.push(new EndAction());
+        }
+    }
+
     isSameColor(arr, x, y, color) {
-        //console.log("color ", arr[x * y * 4 + 3] !== 0);
         return (arr[(y * this.width + x) * 4 + 3] !== 0);
     }
 
@@ -111,7 +146,6 @@ class MainCanvas extends React.Component {
 
     bucket(x, y) {
 
-        console.log('start ON ', x, y);
         let nodeList = [];
         this.bucketDoing = true;
         let imgData = this.ctx.getImageData(0, 0, 800, 600);
@@ -128,7 +162,6 @@ class MainCanvas extends React.Component {
 
             actions++;
             if (actions > maxOperations) {
-                console.log(`More than ${maxOperations} operations, something went wrong`);
                 break;
             }
             const xToTest = posToTest.x;
@@ -149,7 +182,9 @@ class MainCanvas extends React.Component {
             if (yToTest - 1 >= 0)
                 nodeList.push({x: xToTest, y: yToTest - 1});
         }
-        console.log("actions !", actions);
+        if (actions > 1) {
+            this.enableActionValidity = true;
+        }
         const tmpT1 = performance.now();
         // console.log(pixels);
         //this.fillIt(pixels, x, y);
@@ -157,12 +192,11 @@ class MainCanvas extends React.Component {
         const tmpT2 = performance.now();
     }
 
-
     drawPixel() {
         const pixel = this.props.instructionArray.array[this.props.instructionArray.index];
         const directionVectorX = pixel.x - pixel.ox,
-            directionVectorY =  pixel.y - pixel.oy;
-        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI/2;
+            directionVectorY = pixel.y - pixel.oy;
+        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI / 2;
         const path = new Path2D();
 
         path.arc(pixel.ox, pixel.oy, this.ctx.lineWidth, perpendicularVectorAngle, perpendicularVectorAngle + Math.PI);
@@ -171,8 +205,9 @@ class MainCanvas extends React.Component {
         this.ctx.fill(path);
     }
 
-
-
+    posIsOnCanvas(pos) {
+        return (pos.x >= 0 && pos.x <= 800 && pos.y >= 0 && pos.y <= 600);
+    }
 
     handlePlayerDrawing(mouse) {
         let calculateTimeout = 0;
@@ -183,21 +218,27 @@ class MainCanvas extends React.Component {
         let oldpos = {x: this.pos.x, y: this.pos.y};
         this.setPosition(mouse);
         const directionVectorX = this.pos.x - oldpos.x,
-            directionVectorY =  this.pos.y - oldpos.y;
-        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI/2;
+            directionVectorY = this.pos.y - oldpos.y;
+        const perpendicularVectorAngle = Math.atan2(directionVectorY, directionVectorX) + Math.PI / 2;
         const path = new Path2D();
         path.arc(oldpos.x, oldpos.y, this.ctx.lineWidth, perpendicularVectorAngle, perpendicularVectorAngle + Math.PI);
         path.arc(this.pos.x, this.pos.y, this.ctx.lineWidth, perpendicularVectorAngle + Math.PI, perpendicularVectorAngle);
         path.closePath();
         this.ctx.fill(path);
         this.t1 = performance.now();
+        if (this.posIsOnCanvas(oldpos) || this.posIsOnCanvas(this.pos)) {
+            this.enableActionValidity = true;
+        }
 
         calculateTimeout = clamp(0, SEND_DATA_EVERY_X_MILISECONDS, Math.floor(this.t1 - this.t0)); // Get the difference between previous click time and actual click time, floor it and then clamp it between 0 and SEND_DATA_EVERY_X_MILISECONDS
         this.props.instructionArray.array.push(new pixel(this.pos.x, this.pos.y, oldpos.x, oldpos.y, calculateTimeout));
         this.t0 = this.t1;
     }
 
-    clear() {
+    clear(isAction) {
+        if (isAction) {
+            this.enableActionValidity = true;
+        }
         const oldFIllStyle = this.ctx.fillStyle;
 
         this.ctx.fillStyle = "white";
@@ -207,8 +248,8 @@ class MainCanvas extends React.Component {
 
     componentDidUpdate(prevProps, prevState, snapshot) {
 
-
         if (this.props.blocked !== true && !this.mouseMoveEvent) {
+            this.mouseUpEvent = document.addEventListener("mouseup", this.endActionWrapper.bind(this));
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
@@ -219,6 +260,7 @@ class MainCanvas extends React.Component {
         this.offset = {x: this.canvasRef.offsetLeft, y: this.canvasRef.offsetTop};
         this.ctx = this.canvasRef.getContext("2d");
         this.ctx.lineWidth = 3;
+        this.triggerSave();
     }
 
     componentWillUnmount() {
@@ -252,8 +294,6 @@ class MainCanvas extends React.Component {
     changeSelectedAction(selectedAction) {
         if (selectedAction === PAINT && rgbaToHex(...this.choosenColor).startsWith("#FFFFFF"))
             this.choosenColor = this.oldColor;
-        else
-            console.log("what ", rgbaToHex(...this.choosenColor));
         this.selectedAction = selectedAction;
     }
 

@@ -8,6 +8,7 @@ import makeStyles from "@material-ui/core/styles/makeStyles";
 import useTheme from "@material-ui/core/styles/useTheme";
 import {useState} from "react";
 import ChatTextField from "./chatTextField";
+import { useRef, useEffect } from 'react';
 
 const useStyles = makeStyles((theme) => ({
     main: {
@@ -43,24 +44,40 @@ const Chat = (props) => {
     const theme = useTheme();
     const messages = [];
 
-    props.chatMessages.forEach((messageObj) => {
+    const listRef = useRef(null);
 
-        console.log(messageObj);
-        const message =
-            <ListItem>
-                <ListItemIcon>
-                    <img src={paintBucket} alt="Logo" width={30} height={30}/>
-                </ListItemIcon>
-                <ListItemText className={classes[messageObj.color + "Text"]} primary={messageObj.text}/>
-            </ListItem>;
+    useEffect(() => {
+        console.log("go use");
+        listRef.current.scrollTo(0, 10000);
+    });
 
+    props.chatMessages.forEach((messageObj, index) => {
+
+        let message = "";
+        if (index === props.chatMessages.length - 1) {
+            message =
+                <ListItem autoFocus={true}>
+                    <ListItemIcon>
+                        <img src={paintBucket} alt="Logo" width={30} height={30}/>
+                    </ListItemIcon>
+                    <ListItemText className={classes[messageObj.color + "Text"]} primary={messageObj.text}/>
+                </ListItem>;
+        } else {
+
+            message =
+                <ListItem>
+                    <ListItemIcon>
+                        <img src={paintBucket} alt="Logo" width={30} height={30}/>
+                    </ListItemIcon>
+                    <ListItemText className={classes[messageObj.color + "Text"]} primary={messageObj.text}/>
+                </ListItem>;
+        }
         messages.push(message);
     });
-    console.log("stop");
     return (
 
         <div className={classes.abs}>
-            <List className={classes.main} disablePadding={true}>
+            <List className={classes.main} disablePadding={true}  ref={listRef}>
                 {messages}
             </List>
             <ChatTextField  sendMessageTrigger={props.sendMessageTrigger}/>,

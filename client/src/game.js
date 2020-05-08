@@ -7,6 +7,7 @@ import paintBrush from "./photorealistic-icons/paint-brush.png";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
 import eraser from "./photorealistic-icons/eraser.png";
 import trash from "./photorealistic-icons/trash.png";
+import goBack from "./photorealistic-icons/aze.png"
 /* COLORS */
 
 import black from "./photorealistic-icons/000000.png";
@@ -38,7 +39,7 @@ import ChangeColor from "./changeColor";
 import { useLocation } from "react-router-dom";
 import clearCanvas from "./clearCanvas";
 import ChangeStrokeSize from "./changeStroke";
-
+import GoBack from "./goBack";
 
 const {useEffect} = require("react");
 
@@ -76,6 +77,7 @@ const useStyles = makeStyles((theme) => ({
         "max-height": "600px",
     },
     wordToGuess: {
+        "letter-spacing": "3px",
         "background-color": "#363636",
         "color": "white",
         display: "flex",
@@ -109,7 +111,9 @@ const Game = () => {
         instructionArray: new InstructionArray(),
         wordToGuess: "",
         roomName: location.state.roomName,
-        playerName: location.state.playerName
+        playerName: location.state.playerName,
+        looserMusic: new Audio("/sound/ohshiet.mp3"),
+        musicPlaying: false,
     });
 
 
@@ -117,6 +121,20 @@ const Game = () => {
         setState(prevState => {
             return ({...prevState, ...valuesToChange});
         });
+    };
+
+    const playLooserMusic = () => {
+        if (state.musicPlaying === false) {
+            state.looserMusic.play();
+            customSetState({musicPlaying: true});
+        }
+    };
+
+    const stopLooserMusic = () => {
+        if (state.musicPlaying) {
+            state.looserMusic.pause();
+            state.looserMusic.currentTime = 0;
+        }
     };
 
     const callbackCaller = (callback) => {
@@ -142,7 +160,13 @@ const Game = () => {
 
     useEffect(() => {
         changeSelectedActionCanvasWrapper = canvasRef.changeSelectedAction.bind(canvasRef);
-        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef), canvasRef.bucketWrapper.bind(canvasRef), canvasRef.changeColorWrapper.bind(canvasRef), canvasRef.clear.bind(canvasRef), canvasRef.changeStrokeSizeWrapper.bind(canvasRef)];
+        gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef),
+            canvasRef.bucketWrapper.bind(canvasRef),
+            canvasRef.changeColorWrapper.bind(canvasRef),
+            canvasRef.clear.bind(canvasRef),
+            canvasRef.changeStrokeSizeWrapper.bind(canvasRef),
+            canvasRef.triggerSave.bind(canvasRef),
+            canvasRef.goBack.bind(canvasRef)];
         messageServerInstruction = {
             "newPlayerTurn": () => {
                 handleNewPlayerTurn();
@@ -155,7 +179,6 @@ const Game = () => {
         } else if (!state.socket.isSetup) {
             state.socket.setupSocket(`roomName=${state.roomName}&playerName=${state.playerName}`);
         }
-        console.log("new state ? ", state);
         if (state.gameNotStartedYet && state.leader) {
             startGameButton =
                 <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>}
@@ -174,7 +197,7 @@ const Game = () => {
 
     return (
         <div className={classes.mainGrid}>
-            <ListOfPlayers playersInfos={state.playersInfos}/>,
+            <ListOfPlayers playersInfos={state.playersInfos} me={state.playerName}  music={{play: () => playLooserMusic(), stop: () => stopLooserMusic()}}/>,
             <div className={classes.canvasGrid}>
                 <p className={classes.wordToGuess}> {state.wordToGuess} </p>
                 <div className={"canvasGuessWordContainer"}>
@@ -183,11 +206,9 @@ const Game = () => {
                 </div>
                 <div className={classes.actionButtonsGrid}>
                     <ActionButton img={<img src={paintBrush} alt="Logo" width={75} height={75}/>} trigger={() => {
-                        console.log("go for paint ", PAINT);
                         changeSelectedActionCanvasWrapper(PAINT)
                     }}/>
                     <ActionButton img={<img src={paintBucket} alt="Logo" width={75} height={75}/>} trigger={() => {
-                        console.log("go for bucket");
                         changeSelectedActionCanvasWrapper(BUCKET)
                     }}/>
                     <ActionButton img={<img src={eraser} alt="Logo" width={75} height={75}/>} trigger={() => {
@@ -196,10 +217,15 @@ const Game = () => {
                     }}/>
                     <ActionButton img={<img src={trash} alt="Logo" width={75} height={75}/>} trigger={() => {
                         if (state.playerTurn === true) {
-                            canvasRef.clear();
+                            canvasRef.clear(true);
                             state.instructionArray.array.push(new clearCanvas());
                             state.instructionArray.goFlag = true;
                         }
+                    }}/>
+                    <ActionButton img={<img src={goBack} alt="Logo" width={75} height={75}/>} trigger={() => {
+                        canvasRef.goBack();
+                        state.instructionArray.array.push(new GoBack());
+                        state.instructionArray.goFlag = true;
                     }}/>
                     {startGameButton}
                 </div>

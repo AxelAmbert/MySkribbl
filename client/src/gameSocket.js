@@ -6,7 +6,6 @@ class GameSocket
 {
     constructor(parentSetState, URL, instructionArray, networkInstructions, gameMessageInstructions)
     {
-        console.log("im build");
         this.gameMessageInstructions = gameMessageInstructions;
         this.instructionArray = instructionArray;
         this.networkInstruction = networkInstructions;
@@ -91,7 +90,6 @@ class GameSocket
                 });
         });
         this.socket.on("welcome", (data) => {
-            console.log("bjr ^^ ", data);
             this.parentSetState(
                 (_) => {
                     return ({
@@ -109,14 +107,12 @@ class GameSocket
                 this.rush(this.instructionArray);
             }
 
-            console.log("Je recois -> ", data);
             this.instructionArray.array = data;
             this.instructionArray.index = 0;
             this.handleInstructionArray(NO_RUSH);
         });
 
         this.socket.on("wordHint", (data) => {
-           console.log("NEW HINT !", data);
            this.parentSetState((_) => {return ({wordToGuess: data})});
         });
 
@@ -124,7 +120,6 @@ class GameSocket
             if (this.gameMessageInstructions["chooseAWord"]) {
                 this.gameMessageInstructions["chooseAWord"]();
             }
-            console.log("Je dois choisir un mot zeubi !", data);
            this.parentSetState(
                (_) => {
                    return ({
@@ -137,7 +132,6 @@ class GameSocket
 
         this.socket.on("startDrawing", (data) => {
 
-            console.log("draw looser");
             //data.wordToDraw;
             this.parentSetState((_) => {
                 this.instructionArray.array = [];
@@ -152,7 +146,6 @@ class GameSocket
             this.interval = setInterval(() => {
                 if (this.instructionArray.array.length > 2 || this.instructionArray.goFlag === true) {
                     this.instructionArray.goFlag = false;
-                    console.log("J'envoie ", this.instructionArray.array.length);
                     this.socket.emit("gameData", this.instructionArray.array);
                     this.instructionArray.array = [];
                     this.instructionArray.index = 0;
@@ -164,12 +157,10 @@ class GameSocket
             if (this.gameMessageInstructions["newPlayerTurn"]) {
                 this.gameMessageInstructions["newPlayerTurn"]();
             }
-            console.log("LETS GO!");
 
         });
 
         this.socket.on("chatMessage", (messageObject) => {
-            console.log("je recois ", messageObject);
            this.parentSetState((prevState) => {
                prevState.chatMessages.push(messageObject);
                return ({
@@ -188,7 +179,6 @@ class GameSocket
         this.isSetup = true;
     }
     sendChatMessage(message) {
-        console.log("j'envoie chatmessage : ", message);
         this.socket.emit("chatMessage", message);
     }
 }
