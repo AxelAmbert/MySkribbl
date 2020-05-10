@@ -16,6 +16,18 @@ require('dotenv').config();
 const request = require("request-promise");
 const cookieParser = require("cookie-parser");
 const Routines = require("./routines");
+const db = require("../config/database");
+const User = require("../Schemas/UserTest");
+
+
+const lol = async () => {
+    const mdr =  new User({"id": "12", "name": "lol", "password": "Oui."});
+
+    console.log("go");
+    const test = await mdr.save();
+    console.log("done ", test);
+};
+lol();
 
 var RoomList = [];
 let datareceived = [];
