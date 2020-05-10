@@ -59,7 +59,13 @@ class Room {
         let playersInfos = [];
 
         this.players.forEach((player) => {
-           playersInfos.push({name: player.name, score: player.score, hasFoundWord: player.hasFoundWord});
+            let playerIsDrawing = false;
+            if (this.currentRound && this.currentRound.drawingPlayer &&
+            this.currentRound.drawingPlayer.secretID === player.secretID) {
+                playerIsDrawing = true;
+            }
+
+           playersInfos.push({name: player.name, score: player.score, hasFoundWord: player.hasFoundWord, drawing: playerIsDrawing});
         });
         this.players.forEach((roomPlayer) => {
             roomPlayer.socket.emit("playersInfos", playersInfos);
