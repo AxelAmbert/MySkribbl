@@ -32,7 +32,7 @@ import Box from "@material-ui/core/Box";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
 import { useHistory } from "react-router-dom";
-
+import {AWS_URL} from "./constants";
 
 const useStyles = makeStyles((theme) => ({
     body: {
@@ -89,7 +89,6 @@ const useStyles = makeStyles((theme) => ({
 
 }));
 
-const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
 
 const Menu = (props) => {
 

@@ -83,11 +83,11 @@ const ListOfPlayers = (props) => {
                 triggerNewPlayerFoundSound: true,
             });
         }));
-    }else {
     }
     props.playersInfos.forEach((player) => {
+        console.log("is drawing ? ", player.drawing);
         players.push(<PlayerCard playerName={player.name} playerScore={player.score}
-                                 hasFoundWord={player.hasFoundWord}/>);
+                                 hasFoundWord={player.hasFoundWord} isDrawing={player.drawing} />);
     });
     if (props.music) {
         if (mePlayer)
