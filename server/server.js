@@ -10,33 +10,24 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const crypto = require('crypto');
 const path = require('path');
-//const User = require("./Schemas/User");
-//require("./config/database")();
+require("../config/database")();
 require('dotenv').config();
+const userRoute = require("./routes/user");
+const galleryRoute = require ("./routes/gallery");
+
 const request = require("request-promise");
 const cookieParser = require("cookie-parser");
-const Routines = require("./routines");
-const db = require("../config/database");
-const User = require("../Schemas/UserTest");
-
-
-const lol = async () => {
-    const mdr =  new User({"id": "12", "name": "lol", "password": "Oui."});
-
-    console.log("go");
-    const test = await mdr.save();
-    console.log("done ", test);
-};
-lol();
-
 var RoomList = [];
 let datareceived = [];
 const serverMainSocketInstance = new serverMainSocket(io, RoomList);
 
+app.use(express.json());
+
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1/gallery", galleryRoute);
+
 
 app.use(express.static(path.join(__dirname, '../build')));
-
-app.use(express.json());
 
 app.use(cookieParser());
 
@@ -171,4 +162,3 @@ http.listen(8081, () => {
 
 const d = new Date();
 console.log("Hello World, its ", d.getDate(), "/", d.getMonth(), " a ", d.getHours(), "h", d.getMinutes(), "m", d.getSeconds(), "s");
-Routines(RoomList);
