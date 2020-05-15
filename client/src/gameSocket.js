@@ -1,5 +1,5 @@
 import socketIOClient from "socket.io-client";
-import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
+import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS, AWS_URL} from "./constants";
 import InstructionArray from "./instructionArray";
 
 class GameSocket
@@ -173,7 +173,7 @@ class GameSocket
 
     setupSocket(query) {
 
-        this.socket = socketIOClient(this.URL, {reconnect: true, query /* `roomName=${urlParams.get("roomName")}`*/});
+        this.socket = socketIOClient(AWS_URL, {reconnect: true, query /* `roomName=${urlParams.get("roomName")}`*/});
 
         this.socket.on("welcome", this.onWelcome.bind(this));
         this.socket.on("gameData", this.onGameData.bind(this));

@@ -1,7 +1,7 @@
 import React, {useState, useEffect} from "react"
 import ActionButton from "./actionButton";
 import paintBrush from "./photorealistic-icons/paint-brush.png";
-import {BUCKET, PAINT} from "./constants";
+import {BUCKET, PAINT, AWS_URL} from "./constants";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
 import eraser from "./photorealistic-icons/eraser.png";
 
@@ -136,8 +136,9 @@ const Menu = (props) => {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
-        fetch(`${AWS_URL}/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
+        fetch(`/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
             .then(res => {
+		console.log("la reponse", res);
                 return (res.json())})
             .then(res => roomCallback(res));
     };
@@ -148,7 +149,7 @@ const Menu = (props) => {
             return;
         }
 
-        fetch(`${AWS_URL}/joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors'})
+        fetch(`joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors'})
             .then((res) => {
                 return (res.json())
             })
