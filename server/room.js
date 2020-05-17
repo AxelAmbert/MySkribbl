@@ -13,9 +13,13 @@ class Room {
     }
 
     end() {
-        this.currentRound.reset();
-        delete this.currentRound;
-        delete this.wordBank;
+        if (this.currentRound) {
+            this.currentRound.reset();
+            delete this.currentRound;
+        }
+        if (this.wordBank) {
+            delete this.wordBank;
+        }
     }
 
     playerExist(playerName) {

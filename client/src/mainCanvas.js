@@ -19,6 +19,7 @@ class MainCanvas extends React.Component {
 
     constructor(props) {
         super(props);
+        this.bindEndAction = this.endActionWrapper.bind(this);
         this.selectedAction = PAINT;
         this.once = true;
         this.previousState = !this.props.blocked;
@@ -35,12 +36,19 @@ class MainCanvas extends React.Component {
         this.height = 600;
         this.saves = [];
         this.enableActionValidity = true;
-
+        this.mouseUpEvent = null;
+        this.mouseDownEvent = null;
+        this.mouseEnterEvent = null;
+        this.mouseMoveEvent = null;
         if (this.props.blocked !== true) {
-            this.mouseUpEvent = document.addEventListener("mouseup", this.endActionWrapper.bind(this));
+            this.mouseUpEvent = document.addEventListener("mouseup", this.bindEndAction);
+            console.log("EVENT ADDED ", this.mouseUpEvent, this.mouseDownEvent, this.mouseMoveEvent, this.mouseEnterEvent);
+
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
+            console.log("EVENT ADDED ", this.mouseUpEvent, this.mouseDownEvent, this.mouseMoveEvent, this.mouseEnterEvent);
+
         }
 
         this.timeoutInterval = setInterval(() => {
@@ -54,6 +62,16 @@ class MainCanvas extends React.Component {
 
     }
 
+    end() {
+        /*if (this.mouseDownEvent)
+            this.mouseDownEvent.remove();
+        if (this.mouseEnterEvent)
+            this.mouseEnterEvent.remove();
+        if (this.mouseMoveEvent)
+            this.mouseMoveEvent.remove();
+        if (this.timeoutInterval)
+            clearInterval(this.timeoutInterval);*/
+    }
 
     setPosition(mouse) {
         const rect = this.canvasRef.getBoundingClientRect();
@@ -235,6 +253,11 @@ class MainCanvas extends React.Component {
         this.t0 = this.t1;
     }
 
+    clearSaves() {
+        this.saves = [];
+        this.triggerSave();
+    }
+
     clear(isAction) {
         if (isAction) {
             this.enableActionValidity = true;
@@ -249,10 +272,15 @@ class MainCanvas extends React.Component {
     componentDidUpdate(prevProps, prevState, snapshot) {
 
         if (this.props.blocked !== true && !this.mouseMoveEvent) {
-            this.mouseUpEvent = document.addEventListener("mouseup", this.endActionWrapper.bind(this));
+            console.log("EVENT ADDED 2", this.mouseUpEvent, this.mouseDownEvent, this.mouseMoveEvent, this.mouseEnterEvent);
+
+            this.mouseUpEvent = document.addEventListener("mouseup", this.bindEndAction);
             this.mouseMoveEvent = document.addEventListener('mousemove', this.drawWrapper);
             this.mouseDownEvent = document.addEventListener('mousedown', this.setPositionWrapper);
             this.mouseEnterEvent = document.addEventListener('mouseenter', this.setPositionWrapper);
+
+            console.log("EVENT ADDED 2", this.mouseUpEvent, this.mouseDownEvent, this.mouseMoveEvent, this.mouseEnterEvent);
+
         }
     }
 
@@ -264,14 +292,13 @@ class MainCanvas extends React.Component {
     }
 
     componentWillUnmount() {
-        if (this.mouseDownEvent)
-            this.mouseDownEvent.remove();
-        if (this.mouseEnterEvent)
-            this.mouseEnterEvent.remove();
-        if (this.mouseMoveEvent)
-            this.mouseMoveEvent.remove();
-        if (this.timeoutInterval)
+        document.removeEventListener("mouseup", this.bindEndAction);
+        document.removeEventListener('mousemove', this.drawWrapper);
+        document.removeEventListener('mousedown', this.setPositionWrapper);
+        document.removeEventListener('mouseenter', this.setPositionWrapper);
+        if (this.timeoutInterval) {
             clearInterval(this.timeoutInterval);
+        }
     }
 
     handleClickOnCanvas(mouse) {

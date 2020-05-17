@@ -36,7 +36,7 @@ import Grid from "@material-ui/core/Grid";
 import makeStyles from "@material-ui/core/styles/makeStyles";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
-import { useLocation } from "react-router-dom";
+import { useLocation, useHistory } from "react-router-dom";
 import clearCanvas from "./clearCanvas";
 import ChangeStrokeSize from "./changeStroke";
 import GoBack from "./goBack";
@@ -104,6 +104,7 @@ function usePrevious(value) {
 
 
 const Game = () => {
+    const history = useHistory();
     const location = useLocation();
     const classes = useStyles();
     let changeSelectedActionCanvasWrapper = _ => {
@@ -129,7 +130,8 @@ const Game = () => {
         playerName: location.state.playerName,
         looserMusic: new Audio("/sound/ohshiet.mp3"),
         musicPlaying: false,
-
+        inBetweenRound: false,
+        locationKeys: [],
     });
 
     const prevState = usePrevious(state);
@@ -174,8 +176,37 @@ const Game = () => {
         });
     };
 
+    const setHistoryListeners = () => {
+        history.listen((location) => {
+            if (history.action === 'PUSH') {
+                console.log("PUSH");
+                customSetState({locationKeys: [location.key]});
+            }
+
+            if (history.action === 'POP') {
+                if (state.socket) {
+                    state.socket.endConnection();
+                    delete state.socket;
+                    customSetState({socket: null});
+                }
+                if (canvasRef) {
+                    canvasRef.end();
+                }
+                console.log("POP !");
+
+            }
+        });
+    };
 
     useEffect(() => {
+        setHistoryListeners();
+        if (prevState && state && prevState.inBetweenRound === false && state.inBetweenRound === true && canvasRef !== null) {
+            console.log("OUI LETS GO!");
+            canvasRef.clear();
+            canvasRef.clearSaves();
+            customSetState({inBetweenRound: false});
+            return;
+        }
         changeSelectedActionCanvasWrapper = canvasRef.changeSelectedAction.bind(canvasRef);
         gameServerInstruction = [canvasRef.drawPixel.bind(canvasRef),
             canvasRef.bucketWrapper.bind(canvasRef),
@@ -203,6 +234,9 @@ const Game = () => {
                                   state.socket.startGame();
                               }}/>;
         }
+        return (() => {
+           console.log("CLEANUP !");
+        });
     });
     if (state.gameNotStartedYet && state.leader) {
         startGameButton =

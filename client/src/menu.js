@@ -4,6 +4,7 @@ import paintBrush from "./photorealistic-icons/paint-brush.png";
 import {BUCKET, PAINT, AWS_URL} from "./constants";
 import paintBucket from "./photorealistic-icons/paint-bucket.png";
 import eraser from "./photorealistic-icons/eraser.png";
+import Cookies from 'universal-cookie';
 
 /* COLORS */
 
@@ -32,7 +33,6 @@ import Box from "@material-ui/core/Box";
 import WordsToChoose from "./wordsToChoose";
 import ChangeColor from "./changeColor";
 import { useHistory } from "react-router-dom";
-import {AWS_URL} from "./constants";
 
 const useStyles = makeStyles((theme) => ({
     body: {
@@ -91,6 +91,10 @@ const useStyles = makeStyles((theme) => ({
 
 
 const Menu = (props) => {
+    const cookies = new Cookies();
+
+
+    const token = cookies.get("skr-auth-token");
 
     const history = useHistory();
     const classes = useStyles();
@@ -136,8 +140,13 @@ const Menu = (props) => {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
-        fetch(`/newroom/${state.newRoomText}/`, {mode: 'no-cors'})
+        const token = cookies.get("skr-auth-token");
+
+        fetch(`/newroom/${state.newRoomText}/`, {mode: 'no-cors', headers: {
+            'Authorization': "Bearer " + token
+            }})
             .then(res => {
+
 		console.log("la reponse", res);
                 return (res.json())})
             .then(res => roomCallback(res));
@@ -148,14 +157,40 @@ const Menu = (props) => {
             alert("Please enter a roomName and set a username (6 letters min)");
             return;
         }
+        const token = cookies.get("skr-auth-token");
 
-        fetch(`joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors'})
+        fetch(`joinroom/${state.joinRoomText}/${state.playerName}`, {mode: 'no-cors', headers: {
+                'Authorization': "Bearer " + token
+            }})
             .then((res) => {
                 return (res.json())
             })
             .then(res => roomCallback(res));
     };
 
+    const testCo = () => {
+        fetch(`api/v1/user/connect/`, {method: "POST", mode: 'no-cors', body: JSON.stringify({username: "qsdqsdqsdqsdqsdllla"}), headers: {
+                "Content-Type": "application/json"
+            }})
+            .then((res) => {
+                return (res.json())
+            })
+            .then((res) => {
+                console.log("mais quoi");
+                console.log("oh ???", cookies.get("skr-auth-token"));
+                console.log("connect res ", res);
+                if (res.token) {
+                    let currentDate = new Date();
+                    currentDate.setDate(currentDate.getDate() + 3);
+                    console.log(currentDate);
+
+                    cookies.set("skr-auth-token", res.token, {path: "/", expires: currentDate});
+                } else {
+                    console.log("no tojken");
+                }
+            });
+
+    };
 
     const elements = (
         <div className={classes.mainMenu}>
@@ -193,6 +228,9 @@ const Menu = (props) => {
                                })
                        }}/>
                 <input name="Submit" type="submit" onClick={() => joinRoom()}/>
+            </div>
+            <div className={classes.subGrid}>
+                <input name="Submit" type="submit" onClick={() => testCo()}/>
             </div>
         </div>
 

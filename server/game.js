@@ -6,5 +6,4 @@ class Game {
         this.numberOfRoundBeforeEnd = 0;
     }
 }
-
 module.exports = Game;

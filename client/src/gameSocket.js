@@ -17,6 +17,13 @@ class GameSocket
         this.isSetup = false;
     }
 
+    endConnection() {
+        this.socket.disconnect();
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
+    }
+
     handleInstructionArray(rushMode)
     {
         const next = rushMode === RUSH ? null : this.handleInstructionArray.bind(this);
@@ -80,6 +87,7 @@ class GameSocket
                     chooseWordState: false,
                     playerTurn: false,
                     gameNotStartedYet: false,
+                    inBetweenRound: true,
                 });
             });
     }
@@ -121,7 +129,8 @@ class GameSocket
             (_) => {
                 return ({
                     chooseWordState: true,
-                    wordsToChoose: data.wordsToChoose
+                    wordsToChoose: data.wordsToChoose,
+                    inBetweenRound: true,
                 });
             }
         );
