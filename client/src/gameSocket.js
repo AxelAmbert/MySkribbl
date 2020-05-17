@@ -1,5 +1,5 @@
 import socketIOClient from "socket.io-client";
-import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS} from "./constants";
+import {NO_RUSH, RUSH, SEND_DATA_EVERY_X_MILISECONDS, AWS_URL} from "./constants";
 import InstructionArray from "./instructionArray";
 
 class GameSocket
@@ -15,6 +15,13 @@ class GameSocket
         this.URL = URL;
         this.socket = null;
         this.isSetup = false;
+    }
+
+    endConnection() {
+        this.socket.disconnect();
+        if (this.interval) {
+            clearInterval(this.interval);
+        }
     }
 
     handleInstructionArray(rushMode)
@@ -66,116 +73,127 @@ class GameSocket
         this.socket.emit("chooseWord", word);
     }
 
-    setupSocket(query)
-    {
-        const urlParams = new URLSearchParams(window.location.search);
-
-        this.socket = socketIOClient(this.URL, {reconnect: true, query /* `roomName=${urlParams.get("roomName")}`*/});
-
-        this.socket.on("waitBeforeDraw", () => {
-            if (this.gameMessageInstructions["waitBeforeDraw"]) {
-                this.gameMessageInstructions["waitBeforeDraw"]();
-            }
-            if (this.interval) {
-                clearInterval(this.interval);
-                this.interval = null;
-            }
-            this.parentSetState(
-                (_) => {
-                    return ({
-                        chooseWordState: false,
-                        playerTurn: false,
-                        gameNotStartedYet: false,
-                    });
+    onWaitBeforeDraw() {
+        if (this.gameMessageInstructions["waitBeforeDraw"]) {
+            this.gameMessageInstructions["waitBeforeDraw"]();
+        }
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+        }
+        this.parentSetState(
+            (_) => {
+                return ({
+                    chooseWordState: false,
+                    playerTurn: false,
+                    gameNotStartedYet: false,
+                    inBetweenRound: true,
                 });
-        });
-        this.socket.on("welcome", (data) => {
-            this.parentSetState(
-                (_) => {
-                    return ({
-                        playerSecret: data.playerSecret,
-                        leader: data.leader
-                    });
+            });
+    }
+
+    onWelcome(data) {
+        this.parentSetState(
+            (_) => {
+                return ({
+                    playerSecret: data.playerSecret,
+                    leader: data.leader
                 });
+            });
+    }
+
+    onGameData(data) {
+        if (this.gameMessageInstructions["gameData"]) {
+            this.gameMessageInstructions["gameData"]();
+        }
+        if (this.instructionArray.array != null) {
+            this.rush(this.instructionArray);
+        }
+
+        this.instructionArray.array = data;
+        this.instructionArray.index = 0;
+        this.handleInstructionArray(NO_RUSH);
+    }
+
+    onWordHint(data) {
+        this.parentSetState((_) => {
+            return ({wordToGuess: data})
         });
-        this.socket.on("gameData", (data) => {
+    }
 
-            if (this.gameMessageInstructions["gameData"]) {
-                this.gameMessageInstructions["gameData"]();
+    onChooseAWord(data) {
+        if (this.gameMessageInstructions["chooseAWord"]) {
+            this.gameMessageInstructions["chooseAWord"]();
+        }
+        this.parentSetState(
+            (_) => {
+                return ({
+                    chooseWordState: true,
+                    wordsToChoose: data.wordsToChoose,
+                    inBetweenRound: true,
+                });
             }
-            if (this.instructionArray.array != null) {
-                this.rush(this.instructionArray);
-            }
+        );
+    }
 
-            this.instructionArray.array = data;
+    onStartDrawing(data) {
+        this.parentSetState((_) => {
+            this.instructionArray.array = [];
             this.instructionArray.index = 0;
-            this.handleInstructionArray(NO_RUSH);
+            return ({
+                playerTurn: true,
+                gameNotStartedYet: false,
+                wordToGuess: data,
+                chooseWordState: false,
+            });
         });
-
-        this.socket.on("wordHint", (data) => {
-           this.parentSetState((_) => {return ({wordToGuess: data})});
-        });
-
-        this.socket.on("chooseAWord", (data) => {
-            if (this.gameMessageInstructions["chooseAWord"]) {
-                this.gameMessageInstructions["chooseAWord"]();
-            }
-           this.parentSetState(
-               (_) => {
-                   return ({
-                       chooseWordState: true,
-                       wordsToChoose: data.wordsToChoose
-                   });
-               }
-               );
-        });
-
-        this.socket.on("startDrawing", (data) => {
-
-            //data.wordToDraw;
-            this.parentSetState((_) => {
+        this.interval = setInterval(() => {
+            if (this.instructionArray.array.length > 2 || this.instructionArray.goFlag === true) {
+                this.instructionArray.goFlag = false;
+                this.socket.emit("gameData", this.instructionArray.array);
                 this.instructionArray.array = [];
                 this.instructionArray.index = 0;
-                return ({
-                    playerTurn: true,
-                    gameNotStartedYet: false,
-                    wordToGuess: data,
-                    chooseWordState: false,
-                });
-            });
-            this.interval = setInterval(() => {
-                if (this.instructionArray.array.length > 2 || this.instructionArray.goFlag === true) {
-                    this.instructionArray.goFlag = false;
-                    this.socket.emit("gameData", this.instructionArray.array);
-                    this.instructionArray.array = [];
-                    this.instructionArray.index = 0;
-                }
-            }, SEND_DATA_EVERY_X_MILISECONDS);
-        });
-
-        this.socket.on("newPlayerTurn", () =>  {
-            if (this.gameMessageInstructions["newPlayerTurn"]) {
-                this.gameMessageInstructions["newPlayerTurn"]();
             }
+        }, SEND_DATA_EVERY_X_MILISECONDS);
+    }
 
-        });
+    onNewPlayerTurn() {
+        if (this.gameMessageInstructions["newPlayerTurn"]) {
+            this.gameMessageInstructions["newPlayerTurn"]();
+        }
+    }
 
-        this.socket.on("chatMessage", (messageObject) => {
-           this.parentSetState((prevState) => {
-               prevState.chatMessages.push(messageObject);
-               return ({
-                   chatMessages: prevState.chatMessages
-               });
-           });
-        });
-
-        this.socket.on("playersInfos", (playersInfos) => {
-            this.parentSetState((prevState) => {
-               return ({
-                   playersInfos: playersInfos
-               })
+    onChatMessage(messageObject) {
+        this.parentSetState((prevState) => {
+            prevState.chatMessages.push(messageObject);
+            return ({
+                chatMessages: prevState.chatMessages
             });
         });
+    }
+
+    onPlayersInfos(playersInfos) {
+        this.parentSetState((prevState) => {
+            return ({
+                playersInfos: playersInfos
+            })
+        });
+    }
+
+    setupSocket(query) {
+
+        this.socket = socketIOClient(AWS_URL, {reconnect: true, query /* `roomName=${urlParams.get("roomName")}`*/});
+
+        this.socket.on("welcome", this.onWelcome.bind(this));
+        this.socket.on("gameData", this.onGameData.bind(this));
+        this.socket.on("wordHint", this.onWordHint.bind(this));
+        this.socket.on("chatMessage", this.onChatMessage.bind(this));
+        this.socket.on("chooseAWord", this.onChooseAWord.bind(this));
+        this.socket.on("startDrawing", this.onStartDrawing.bind(this));
+        this.socket.on("playersInfos", this.onPlayersInfos.bind(this));
+        this.socket.on("newPlayerTurn", this.onNewPlayerTurn.bind(this));
+        this.socket.on("waitBeforeDraw", this.onWaitBeforeDraw.bind(this));
+
         this.isSetup = true;
     }
     sendChatMessage(message) {

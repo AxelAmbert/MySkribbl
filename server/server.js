@@ -10,21 +10,30 @@ var http = require('http').createServer(app);
 var io = require('socket.io')(http);
 const crypto = require('crypto');
 const path = require('path');
-//const User = require("./Schemas/User");
-//require("./config/database")();
+require("../config/database")();
 require('dotenv').config();
+const userRoute = require("./routes/user");
+const galleryRoute = require ("./routes/gallery");
+
 const request = require("request-promise");
 const cookieParser = require("cookie-parser");
-const Routines = require("./routines");
-
 var RoomList = [];
 let datareceived = [];
 const serverMainSocketInstance = new serverMainSocket(io, RoomList);
 
+app.use(express.json());
+app.set('trust proxy', 1);
+app.use("/api/v1/user", userRoute);
+app.use("/api/v1/gallery", galleryRoute);
+
+
+app.use((req, res, next) => {
+
+    console.log(req.url);
+   next();
+});
 
 app.use(express.static(path.join(__dirname, '../build')));
-
-app.use(express.json());
 
 app.use(cookieParser());
 
@@ -145,12 +154,24 @@ function median(values) {
         return (values[half-1] + values[half]) / 2.0;
 }
 
+const reactRoutes = ["/mainPage"];
+/*
+
+reactRoutes.forEach((route) => {
+    app.get(route, function (req, res) {
+        res.redirect(route);
+    });
+});
+*/
 
 
 
 app.get('/*', function (req, res) {
-    res.sendFile(path.join(__dirname, 'build', 'index.html'));
+
+    res.redirect("/");
+    //res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });
+
 
 
 http.listen(8081, () => {
@@ -159,4 +180,3 @@ http.listen(8081, () => {
 
 const d = new Date();
 console.log("Hello World, its ", d.getDate(), "/", d.getMonth(), " a ", d.getHours(), "h", d.getMinutes(), "m", d.getSeconds(), "s");
-Routines(RoomList);

@@ -1,4 +1,4 @@
-export const AWS_URL = "http://appskr-env.eba-ufuzuuq8.us-east-1.elasticbeanstalk.com";
+export const AWS_URL = "https://www.drawguesser.com";
 export const NO_RUSH = false;
 export const RUSH = true;
 export const SEND_DATA_EVERY_X_MILISECONDS = 1000;

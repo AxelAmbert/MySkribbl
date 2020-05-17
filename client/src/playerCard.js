@@ -5,6 +5,7 @@ import useTheme from "@material-ui/core/styles/useTheme";
 import CardMedia from "@material-ui/core/CardMedia";
 import orange from "./images/Sans titre.png";
 import Grid from "@material-ui/core/Grid";
+import draw from "./photorealistic-icons/paint-brush.png";
 
 const useStyles = makeStyles((theme) => ({
 
@@ -77,6 +78,7 @@ const PlayerCard = (props) => {
                     <CardContent className={classes.testC}>
                         {props.playerScore} points
                     </CardContent>
+                    {props.isDrawing ? <CardMedia src={draw}/> : ""}
                 </div>
             </div>
         </Card>

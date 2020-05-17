@@ -12,7 +12,7 @@ class Round {
         this.hintInterval = null;
         this.startDrawTimer = 0;
     }
-
+//test
     reset() {
         if (this.chooseWordTimeout)
             clearTimeout(this.chooseWordTimeout);
