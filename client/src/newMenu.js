@@ -27,14 +27,15 @@ const NewMenu = (props) => {
     });
 
 
-    const storeTokeAndGo = (token) => {
+    const storeTokeAndGo = (res) => {
         let currentDate = new Date();
 
         currentDate.setDate(currentDate.getDate() + 3);
-        console.log(currentDate, token);
-        cookies.set("skr-auth-token", token, {path: "/", expires: currentDate});
+        console.log(currentDate, res.token);
+        cookies.set("skr-auth-token", res.token, {path: "/", expires: currentDate});
         history.push({
             pathname: '/mainPage',
+            customNameData: res.data.infos,
         });
     };
 
@@ -48,9 +49,9 @@ const NewMenu = (props) => {
             console.log(res);
             if (res.status === 429) {
                 notify("WOW chill ! Too much requests, try again later ❤", "chill")
-            } else if (res.success === true && res.token && res.token != undefined) {
+            } else if (res.success === true && res.token && res.token != undefined && res.data && res.data.infos) {
                 notify("Sign up successfull :)", "signsucess");
-                storeTokeAndGo(res.token);
+                storeTokeAndGo(res);
                 console.log(res.data);
             } else {
                 notify(res.error + " :(", "notcool");

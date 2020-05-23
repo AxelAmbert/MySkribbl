@@ -16,8 +16,6 @@ class ChatTextField extends React.Component {
         return ([
             <form onSubmit={(e) => {
                 e.preventDefault();
-
-
                 const text = this.state.text.substr(0, 50);
                 if (this.state.text.length === 0)
                     return;

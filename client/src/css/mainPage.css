@@ -1,0 +1,181 @@
+
+*:focus {
+    outline: none !important;
+}
+
+html, body, root {
+    min-height: 100% !important;
+    height: 100%;
+    margin: 0;
+    padding: 0;
+}
+
+
+.mainDiv {
+    display: flex;
+    flex-direction: row;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    background: #282f5b;
+    min-width: 800px;
+    color: white;
+}
+
+elements {
+
+    display: flex;
+    width: 70%;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    position: absolute;
+}
+
+
+
+.dot {
+    padding-right: 0;
+    margin-left: 25px;
+    min-width: 50px;
+    min-height: 50px;
+    max-width: 50px;
+    max-height: 50px;
+    display: inline-block;
+}
+
+.rightInfos {
+    min-width: 200px;
+    max-width: 400px;
+    position: relative;
+
+    width: 30%;
+    height: 100%;
+}
+
+
+.userInfos {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: xx-large;
+    width: 100%;
+    height: 10%;
+}
+
+.username {
+    width: 100%;
+    padding-left: 15px;
+}
+
+
+.friendDiv {
+    display: flex;
+    flex-direction: column;
+    border-radius: 40px 40px 0 0;
+
+    width: 100%;
+    height: 90%;
+    background: #202442;
+    min-height: 600px;
+}
+
+mainPanel {
+    min-width: 500px;
+    bottom: 0;
+    /*background: #454555;*/
+    width: 70%;
+    height: 100%;
+    position: relative;
+}
+
+.topPanel {
+    height: 10%;
+    width: 100%;
+    /*background: pink;*/
+    position: relative;
+}
+
+topPanelElements {
+    bottom: 10px;
+    position: absolute;
+}
+
+.imagecarou {
+    max-width: 150px;
+    max-height: 100px;
+    width: 150px;
+    height: 100px;
+}
+
+.gamePanel {
+    min-height: 325px;
+    min-width: 500px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    text-align: center;
+    border-radius: 40px;
+    margin-left: 50%;
+    width: 80%;
+    height: 20%;
+    background: #202442;
+    transform: translateX(-50%);
+    margin-bottom: 5%;
+    margin-top: 5%;
+    position: relative;
+}
+
+.gamePanel > text {
+    color: white;
+    font-weight: bold;
+    font-size: x-large;
+}
+
+.textField {
+    margin-top: 5%;
+    margin-left: 50%;
+    width: 50%;
+    transform: translateX(-50%);
+}
+
+.buttonDiv {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    padding-top: 5%;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.buttonDiv > Button {
+    width: 20%;
+    height: 50%;
+    margin-right: 3%;
+    margin-left: 3%;
+
+}
+
+.slider-div {
+    padding: 50px 0 0 0;
+    margin-left: 50%;
+    width: 70%;
+    transform: translateX(-50%);
+}
+
+.slick-slide > div {
+    transform: scale(.5);
+    transition: transform .3s cubic-bezier(.4,0,.2,1);
+}
+.slick-center > div {
+    transform: scale(1);
+}
+
+.bottomPanel {
+    height: 85%;
+}
+
+

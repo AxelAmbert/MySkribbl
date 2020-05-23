@@ -24,9 +24,13 @@ const ConnectionValidation = () => {
         },
     }).then(res => res.json()).then((res) => {
         console.log("res ? ", res);
-        if (res.token) {
+        if (res.token && res.data && res.data.infos) {
+            console.log("data ?")
             cookies.set("skr-auth-token", res.token);
-            history.push("/mainPage");
+            history.push({
+                pathname: '/mainPage',
+                customNameData: res.data.infos,
+            });
         } else {
             history.push("/connection");
         }

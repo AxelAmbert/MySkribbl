@@ -22,11 +22,11 @@ class Room {
         }
     }
 
-    playerExist(playerName) {
+    playerExist(secretID) {
         let exist = false;
 
         this.players.forEach((player) => {
-            if (player.name === playerName)
+            if (player.secretID === secretID)
                 exist = true;
         });
         return (exist);

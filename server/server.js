@@ -14,18 +14,34 @@ require("../config/database")();
 require('dotenv').config();
 const userRoute = require("./routes/user");
 const galleryRoute = require ("./routes/gallery");
-
+const roomRoute = require("./routes/room");
 const request = require("request-promise");
 const cookieParser = require("cookie-parser");
-var RoomList = [];
+const RoomList = [];
+const PlayerList = [];
 let datareceived = [];
-const serverMainSocketInstance = new serverMainSocket(io, RoomList);
+const serverMainSocketInstance = new serverMainSocket(io, RoomList, PlayerList);
+
+process.on('SIGINT', function() {
+    console.log( "\nGracefully shutting down from SIGINT (Ctrl-C)" );
+    // some other closing procedures go here
+    process.exit(1);
+});
+
 
 app.use(express.json());
 app.set('trust proxy', 1);
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/gallery", galleryRoute);
 
+app.use("/api/v1/room", (req, res, next) => {
+console.log("oh con");
+    req.PlayerList = PlayerList;
+    req.RoomList = RoomList;
+    next();
+});
+
+app.use("/api/v1/room", roomRoute);
 
 app.use((req, res, next) => {
 
@@ -84,64 +100,7 @@ app.post("/photo/", async (req, res) => {
     console.log("body ? ", req.body);
 });
 
-app.get('/newroom/:roomName', (req, res) => {
-    const roomName = req.params.roomName || null;
-    const TheRoom = RoomList[req.params.roomName];
-    if (TheRoom) {
-        res.json({success: false, error: "Room already exist"});
-        return;
-    } else if (!roomName) {
-        res.json({success: false, error: "No room name specified"});
-        return;
-    }
-    const roomSecret = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    //RoomList[req.params.roomName] = {roomName: req.params.roomName, playerSockets: [] , roomSecret, game: new Game()};
-    RoomList[req.params.roomName] = new Room(req.params.roomName, roomSecret);
-    res.json({success: true, roomName, roomSecret});
-});
-/*
-app.post("/user/", async (req, res) => {
 
-    const {username, password} = req.body;
-    let user = null;
-
-    try {
-        user = await User.create({
-            username,
-            password
-        });
-    } catch (error) {
-        res.status(500).json({success: false, error});
-        return;
-    }
-
-    res.status(200).json(user);
-});*/
-
-app.get('/joinroom/:roomName/:playerName',
-    (req, res) => {
-
-    const Room = RoomList[req.params.roomName];
-
-
-    if (!Room) {
-        res.status(404).json({success: false, error: `Room ${req.params.roomName} don't exist`});
-        return;
-    } else if (Room.playerExist(req.params.playerName)) {
-        res.status(500).json({success: false, error: `player ${req.params.playerName} already in the room`});
-        return;
-    }
-    res.status(200).json({success: true, roomName: req.params.roomName});
-
-    //console.log(`New id -> ${req.params.id}`);
-    /*
-        try {
-            RoomList[req.params.roomId].socketList.push(socket);
-        } catch (error) {
-
-        }
-        res.json({status: "oK"});*/
-});
 function median(values) {
 
     values.sort( function(a,b) {return a - b;} );
@@ -168,6 +127,7 @@ reactRoutes.forEach((route) => {
 
 app.get('/*', function (req, res) {
 
+    console.log("redirect ");
     res.redirect("/");
     //res.sendFile(path.join(__dirname, '../build', 'index.html'));
 });

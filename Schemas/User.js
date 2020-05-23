@@ -1,4 +1,6 @@
 const mongoose = require("mongoose");
+var bcrypt = require('bcrypt');
+const {performance} = require('perf_hooks');
 
 const usernameVerification = (username) => {
     if (!username || username.length < 4)
@@ -53,6 +55,22 @@ const UserSchema = new mongoose.Schema({
             "Please add a valid email"
         ]
     },
+});
+
+UserSchema.methods.matchPassword = async function(enteredPassword) {
+    return (await bcrypt.compare(enteredPassword, this.password));
+};
+
+UserSchema.pre("save", async function(next) {
+    if (this.isModified("password")) {
+        const passSalt = await bcrypt.genSalt(12);
+        this.password = await bcrypt.hash(this.password, passSalt);
+    }
+    if (this.isModified("email")) {
+        const emailSalt = await bcrypt.genSalt(12);
+        this.email = await bcrypt.hash(this.email, emailSalt);
+    }
+    next();
 });
 
 module.exports = mongoose.model("User", UserSchema);

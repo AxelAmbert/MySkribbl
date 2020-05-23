@@ -103,7 +103,8 @@ function usePrevious(value) {
 }
 
 
-const Game = () => {
+const Game = (props) => {
+    console.log(props);
     const history = useHistory();
     const location = useLocation();
     const classes = useStyles();
@@ -115,6 +116,7 @@ const Game = () => {
     let startGameButton = "";
 
     const [state, setState] = useState({
+        playerSecretID: location.playerSecretID,
         playerTurn: false,
         gameNotStartedYet: true,
         chooseWordState: false,
@@ -223,9 +225,10 @@ const Game = () => {
             "waitBeforeDraw": canvasRef.clear.bind(canvasRef),
         };
         if (!state.socket) {
-            customSetState({socket: new GameSocket(callbackCaller, AWS_URL, state.instructionArray, gameServerInstruction, messageServerInstruction)});
+            customSetState({socket: new GameSocket(callbackCaller, props.socket, state.instructionArray, gameServerInstruction, messageServerInstruction)});
+
         } else if (!state.socket.isSetup) {
-            state.socket.setupSocket(`roomName=${state.roomName}&playerName=${state.playerName}`);
+            state.socket.setupSocket(`roomName=${state.roomName}&playerSecretID=${state.playerSecretID}&mode=game`);
         }
         if (state.gameNotStartedYet && state.leader) {
             startGameButton =

@@ -5,12 +5,13 @@
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon -r dotenv/config server/server.js"
+    "start": "endnode && node --trace-warnings -r dotenv/config server/server.js"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "bcrypt": "^4.0.1",
     "browser-image-compression": "^1.0.9",
     "concurrently": "^5.1.0",
     "cookie-parser": "^1.4.5",
