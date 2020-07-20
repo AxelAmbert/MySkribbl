@@ -11,12 +11,14 @@ const createAccountLimiter = rateLimit({
         "Too many accounts created from this IP, please try again after an hour"
 });
 
-const { connect, createUser, verifyTokenValidity} = require("../controllers/user");
+const { connect, createUser, verifyTokenValidity, createGoogleUser, connectGoogleUser} = require("../controllers/user");
 
 const router = express.Router({ mergeParams: true });
 
 router.route("/verifyTokenValidity").post(verifyTokenValidity);
 router.route("/connect").post(connect);
+router.route("/google/connect/:token").post(connectGoogleUser)
+router.route("/google/:googleToken").post(createGoogleUser);
 router.post("/", createAccountLimiter, createUser);
 //router.route("/:id").get(getUser).put(updateUser).delete(deleteUser);
 

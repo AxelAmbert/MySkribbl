@@ -17,6 +17,9 @@ const galleryRoute = require ("./routes/gallery");
 const roomRoute = require("./routes/room");
 const request = require("request-promise");
 const cookieParser = require("cookie-parser");
+const ug = require("./UsernameGenerator");
+
+const UsernameGenerator = new ug();
 const RoomList = [];
 const PlayerList = [];
 let datareceived = [];
@@ -31,8 +34,17 @@ process.on('SIGINT', function() {
 
 app.use(express.json());
 app.set('trust proxy', 1);
+
+app.use("/api/v1/user", (req, res, next) => {
+    req.UsernameGenerator = UsernameGenerator;
+    next();
+});
+
 app.use("/api/v1/user", userRoute);
 app.use("/api/v1/gallery", galleryRoute);
+
+
+
 
 app.use("/api/v1/room", (req, res, next) => {
 console.log("oh con");

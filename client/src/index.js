@@ -21,7 +21,7 @@ class App extends React.Component{
         return (
             <Router>
                 <Switch>
-                    <Route exact path={"/"} component={ConnectionValidation}/>*/
+                    <Route exact path={"/"} component={ConnectionValidation}/>
                     <Route path={"/connection"}  component={NewMenu}/>
                     <Route path={"/game"}  render={(props) => <Game socket={this.socket} {...props} />}/>
                     <Route path={"/mainPage"}  render={(props) => <MainPage socket={this.socket} {...props} />}/>

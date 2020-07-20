@@ -10,6 +10,7 @@
     "axios": "^0.19.2",
     "bootstrap": "^4.5.0",
     "compressorjs": "^1.0.6",
+    "gapi-script": "^1.0.2",
     "hex-and-rgba": "^1.4.2",
     "react": "^16.13.1",
     "react-alert": "^7.0.1",

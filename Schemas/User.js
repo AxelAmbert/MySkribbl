@@ -8,7 +8,8 @@ const usernameVerification = (username) => {
     for (const char of username) {
         if (!((char >= 'A' && char <= 'Z') ||
         (char >= 'a' && char <= 'z') ||
-        (char >= '0' && char <= '9')))
+        (char >= '0' && char <= '9') ||
+            char === " "))
             return false;
     }
     return true;
@@ -29,6 +30,7 @@ const UserSchema = new mongoose.Schema({
            validator: usernameVerification,
            message: messageWrapper => `${messageWrapper.value} is not a valid username`,
        },
+       maxLength: 25,
    },
     password: {
         type: String,
@@ -38,18 +40,22 @@ const UserSchema = new mongoose.Schema({
             message: messageWrapper => `invalid password, should be at least 8 characters long`,
         },
         select: false,
+        maxLength: 50,
     },
     images: [{
        type: mongoose.Schema.Types.ObjectId, ref: "Image"
     }],
     createAt: {
         type: Date,
-        default: Date.now
+        default: Date.now,
+    },
+    passwordChangedAt: {
+        type: Date,
+        default: Date.now,
     },
     email: {
         type: String,
         required: [true, "Please add an email"],
-        unique: true,
         match: [
             /^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/,
             "Please add a valid email"

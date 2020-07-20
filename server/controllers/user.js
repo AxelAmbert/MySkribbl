@@ -3,10 +3,12 @@ const User = require("../../Schemas/User");
 const errorCatcher = require("../tools/errorCatcher");
 const jwt = require('jsonwebtoken');
 const {performance} = require('perf_hooks');
+const {OAuth2Client} = require('google-auth-library');
+const client = new OAuth2Client(process.env.GOOGLE_AUTH_CLIENT_ID);
 
 exports.connect = errorCatcher(async(req, res, next) => {
 
-    const user = await User.findOne({username: req.body.username}).select("+password");;
+    const user = await User.findOne({username: req.body.username}).select("+password");
     if (!user || !req.body.password) {
         return (next(res.status(500).json({success: false, error: `User ${req.body.username} not found, or incorrect password.`})));
     }
@@ -44,6 +46,60 @@ exports.createUser = errorCatcher(async (req, res, next) => {
     const token = jwt.sign({exp: Math.floor(Date.now() / 1000) + (60 * 60 * 72), _id: newUser._id}, process.env.JWT_SECRET);
     return (next(res.status(200).json({success: true, data: {infos: {username: newUser.username,}}, token})));
 });
+
+exports.createGoogleUser = errorCatcher(async (req, res, next) => {
+    const googleToken = req.params.googleToken || null;
+    let payload = [];
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: googleToken,
+            audience: process.env.GOOGLE_AUTH_CLIENT_ID,
+        });
+        payload = ticket.getPayload();
+        console.log("payload ", payload);
+        const userid = payload['sub'];
+
+    } catch (error) {
+        console.log(error.message);
+        return next(res.status(500).json({success: false, error: error.message}));
+    }
+    const userTestEmail = User.findOne({email: payload["email"]});
+
+    if (userTestEmail) {
+
+    }
+
+
+    let username = "";
+    for (let i = 0; i < 25; i++) {
+        username = req.UsernameGenerator.getARandomUsername();
+        console.log("trying ", username);
+        const userExist = await User.findOne({username});
+        if (userExist) {
+            console.log("exist wtf ", userExist);
+            username = null;
+        }
+        else
+            break;
+    }
+
+    if (username === null) {
+        username = payload["email"].split("@")[0];
+    }
+    const user = await User.create({username: username, email: payload["email"], password: "emptypass"});
+    const token = await jwt.sign({exp: Math.floor(Date.now() / 1000) + (60 * 60 * 72), _id: user._id}, process.env.JWT_SECRET);
+    //let username = payload["c"].substring(0, s.indexOf('?'));
+
+    return (next(res.status(200).json({success: true, data: {infos: {username: user.username,}}, token})));
+   // const user = await User.create({username: });
+
+});
+
+exports.connectGoogleUser = errorCatcher(async (req, res, next) => {
+
+});
+
 
 exports.verifyTokenValidity = errorCatcher(async (req, res, next) => {
     console.log("go !");

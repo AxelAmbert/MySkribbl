@@ -1,18 +1,14 @@
 import React, {Fragment, useEffect, useState} from 'react';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import "./css/mainPage.css";
-import TextField from "@material-ui/core/TextField";
 import player from "./images/Sans titre.png";
 import logout from "./images/logout.png";
 import Image from 'react-bootstrap/Image'
 import Button from "@material-ui/core/Button";
-import {Fade as Slide} from 'react-slideshow-image';
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Slider from "react-slick";
 import MovingImage from "./movingImage";
-import {createMuiTheme, withStyles} from "@material-ui/core/styles";
-import Select from '@material-ui/core/Select';
 import MenuItem from "@material-ui/core/MenuItem";
 import StyledTextField from "./styledTextField";
 import StyledSelect from "./styledSelect";
@@ -20,8 +16,6 @@ import Cookies from 'universal-cookie';
 import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import {useHistory} from "react-router-dom";
-import socketIOClient from "socket.io-client";
-import {AWS_URL} from "./constants";
 
 
 const settings = {
@@ -205,6 +199,7 @@ const MainPage = (props) => {
                     </div>
                 </div>
             </elements>
+            <ToastContainer/>
         </div>
     );
 };

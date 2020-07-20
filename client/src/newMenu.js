@@ -9,6 +9,7 @@ import {ToastContainer, toast} from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Cookies from 'universal-cookie';
 import {useHistory} from "react-router-dom";
+import { loadAuth2, loadAuth2WithProps } from 'gapi-script';
 
 const NewMenu = (props) => {
 
@@ -24,8 +25,43 @@ const NewMenu = (props) => {
     const history = useHistory();
     const [state, setState] = useState({
         actualCase: "Sign In",
+        auth2: null,
     });
 
+
+    useEffect(  () => {
+       if (state.auth2 !== null)
+        return;
+       const initAuth2 = async () => {
+           console.log("init ");
+
+           let auth2 = await loadAuth2(process.env.REACT_APP_GOOGLE_AUTH_CLIENT_ID, "profile email");
+            const button = document.getElementById("google");
+
+           auth2.attachClickHandler(button, {},
+               (googleUser) => {
+                   getGoogleUserInfos(googleUser);
+               }, (error) => {
+                   console.log(JSON.stringify(error))
+               });
+           setState((prev) => {
+               return ({
+                   ...prev,
+                   auth2,
+               });
+           });
+       }
+       initAuth2();
+    });
+
+    const getGoogleUserInfos = (/*GoogleUser*/googleUser) => {
+        const basicProfile = googleUser.getBasicProfile();
+        const email = basicProfile.getEmail();
+
+        console.log("the email ? ", email);
+        console.log("token ", googleUser.getAuthResponse());
+
+    };
 
     const storeTokeAndGo = (res) => {
         let currentDate = new Date();
@@ -40,7 +76,6 @@ const NewMenu = (props) => {
     };
 
     const handleSignResponse = (URL) => {
-
         fetch(URL, {
             method: "POST", mode: 'cors', body: JSON.stringify(prepareBody()), headers: {
                 "Content-Type": "application/json"
@@ -153,6 +188,9 @@ const NewMenu = (props) => {
         });
     };
 
+    const googleSign = () => {
+
+    };
 
     cases[state.actualCase].field.forEach((value, index) => {
         elements.push(
@@ -186,6 +224,9 @@ const NewMenu = (props) => {
                     }} variant="contained" size="large" color="primary" className={"sign-button"}
                             onClick={() => cases[state.actualCase].verifFunc()}>
                         {state.actualCase}
+                    </Button>
+                    <Button onClick={googleSign} id={'google'}>
+                        lol google
                     </Button>
                     <a href="" className="link"
                        onClick={(e) => {
